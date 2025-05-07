@@ -14,6 +14,9 @@ RUN yarn install --frozen-lockfile
 # Copy source
 COPY . .
 
+# Ensure dist directory is clean before starting
+RUN rm -rf /app/apps/api/dist
+
 # For development, we'll use the dev script directly
 CMD ["yarn", "workspace", "@cosmo/api", "dev"]
 
