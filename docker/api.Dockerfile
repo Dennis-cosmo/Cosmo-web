@@ -2,6 +2,9 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Install build dependencies for bcrypt
+RUN apk add --no-cache python3 make g++
+
 # Install dependencies
 COPY package.json yarn.lock* ./
 COPY packages/shared/package.json ./packages/shared/
@@ -10,6 +13,9 @@ COPY packages/connectors/package.json ./packages/connectors/
 COPY apps/api/package.json ./apps/api/
 
 RUN yarn install --frozen-lockfile
+
+# Instalar bcrypt explícitamente en el workspace de API
+RUN yarn workspace @cosmo/api add bcrypt @types/bcrypt
 
 # Copy source
 COPY . .

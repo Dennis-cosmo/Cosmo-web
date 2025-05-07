@@ -1,14 +1,34 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { dataSource } from "@cosmo/database";
 import { AppController } from "./app.controller";
+import { AuthModule } from "./auth/auth.module";
+import { UsersModule } from "./users/users.module";
+import { ExpensesModule } from "./expenses/expenses.module";
+import { ReportsModule } from "./reports/reports.module";
 
 @Module({
   imports: [
     // Configuración de variables de entorno
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+
+    // Conexión a la base de datos
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: "postgres",
+        url: configService.get<string>("DATABASE_URL"),
+        entities: dataSource.options.entities,
+        migrations: dataSource.options.migrations,
+        logging: configService.get<string>("NODE_ENV") === "development",
+        synchronize: configService.get<string>("NODE_ENV") === "development",
+      }),
     }),
 
     // Limitador de tasa para evitar abusos
@@ -18,6 +38,12 @@ import { AppController } from "./app.controller";
         limit: 100,
       },
     ]),
+
+    // Módulos de la aplicación
+    AuthModule,
+    UsersModule,
+    ExpensesModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [

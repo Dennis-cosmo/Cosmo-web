@@ -9,6 +9,21 @@ import {
 import { Expense } from "./expense.entity";
 import { Report } from "./report.entity";
 
+export enum CompanySize {
+  MICRO = "1-10",
+  SMALL = "11-50",
+  MEDIUM = "51-200",
+  LARGE = "201-1000",
+  ENTERPRISE = "1000+",
+}
+
+export enum SustainabilityLevel {
+  BEGINNER = "beginner",
+  INTERMEDIATE = "intermediate",
+  ADVANCED = "advanced",
+  LEADER = "leader",
+}
+
 @Entity("users")
 export class User {
   @PrimaryGeneratedColumn("uuid")
@@ -32,14 +47,63 @@ export class User {
   @Column({ default: "active", type: "varchar" })
   status!: "active" | "inactive" | "suspended";
 
+  // Información de la empresa
   @Column({ nullable: true, type: "varchar" })
   companyName?: string;
+
+  @Column({ nullable: true, type: "varchar" })
+  companyLegalName?: string;
+
+  @Column({ nullable: true, type: "varchar" })
+  taxId?: string;
 
   @Column({ nullable: true, type: "varchar" })
   companySize?: string;
 
   @Column({ nullable: true, type: "varchar" })
   industry?: string;
+
+  @Column({ nullable: true, type: "varchar" })
+  website?: string;
+
+  @Column({ nullable: true, type: "varchar" })
+  country?: string;
+
+  @Column({ nullable: true, type: "varchar" })
+  address?: string;
+
+  // Información de sostenibilidad
+  @Column({
+    nullable: true,
+    type: "varchar",
+    default: SustainabilityLevel.BEGINNER,
+  })
+  sustainabilityLevel?: string;
+
+  @Column({ nullable: true, type: "simple-array" })
+  sustainabilityGoals?: string[];
+
+  @Column({ nullable: true, type: "simple-array" })
+  certifications?: string[];
+
+  @Column({ nullable: true, type: "varchar" })
+  sustainabilityBudgetRange?: string;
+
+  @Column({ nullable: true, type: "text" })
+  sustainabilityNotes?: string;
+
+  // Configuración y verificación
+  @Column({ default: false, type: "boolean" })
+  emailVerified!: boolean;
+
+  @Column({ nullable: true, type: "varchar" })
+  verificationToken?: string;
+
+  @Column({ nullable: true, type: "timestamp" })
+  verificationTokenExpiry?: Date;
+
+  @Column({ default: false, type: "boolean" })
+  onboardingCompleted!: boolean;
 
   @OneToMany(() => Expense, (expense) => expense.user)
   expenses!: Expense[];

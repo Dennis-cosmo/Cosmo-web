@@ -5,10 +5,12 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "dev": "tsup src/index.ts --format esm,cjs --watch --dts",
     "lint": "eslint \"src/**/*.ts\"",
-    "clean": "rm -rf dist && rm -rf node_modules",
+    "clean": "rm -rf dist",
+    "migrate": "ts-node src/scripts/migrate.ts",
+    "migration:create": "typeorm migration:create",
     "db:migrate": "typeorm migration:run -d dist/data-source.js",
     "db:generate": "typeorm migration:generate -d dist/data-source.js",
     "db:revert": "typeorm migration:revert -d dist/data-source.js"
@@ -25,4 +27,4 @@
     "tsup": "^8.0.2",
     "typescript": "^5.3.3"
   }
-} 
+}
