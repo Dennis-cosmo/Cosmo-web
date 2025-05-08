@@ -4,6 +4,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { dataSource } from "@cosmo/database";
+import { User, Expense, Report } from "@cosmo/database";
 import { AppController } from "./app.controller";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
@@ -24,7 +25,7 @@ import { ReportsModule } from "./reports/reports.module";
       useFactory: (configService: ConfigService) => ({
         type: "postgres",
         url: configService.get<string>("DATABASE_URL"),
-        entities: dataSource.options.entities,
+        entities: [User, Expense, Report],
         migrations: dataSource.options.migrations,
         logging: configService.get<string>("NODE_ENV") === "development",
         synchronize: configService.get<string>("NODE_ENV") === "development",

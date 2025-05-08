@@ -1,5 +1,5 @@
-import RegisterForm from "@/components/auth/RegisterForm";
 import { Metadata } from "next";
+import RegisterForm from "../../../components/auth/RegisterForm";
 
 export const metadata: Metadata = {
   title: "Registro | Cosmo",

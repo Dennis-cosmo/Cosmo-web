@@ -21,6 +21,29 @@ const accountSchema = z
     path: ["confirmPassword"],
   });
 
+// Función auxiliar para validar URLs con o sin protocolo
+const urlValidator = (value: string) => {
+  if (!value) return true; // Permitir valores vacíos
+
+  // Si ya tiene protocolo, usar validador URL normal
+  if (value.match(/^https?:\/\//i)) {
+    try {
+      new URL(value);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Si no tiene protocolo, añadir https:// y validar
+  try {
+    new URL(`https://${value}`);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 // Paso 2: Esquema de validación de la empresa
 const companySchema = z.object({
   companyName: z.string().min(2, "El nombre de la empresa es requerido"),
@@ -32,7 +55,7 @@ const companySchema = z.object({
   industry: z.string().min(1, "Por favor selecciona una industria"),
   website: z
     .string()
-    .url("Por favor introduce una URL válida")
+    .refine(urlValidator, "Por favor introduce una URL válida")
     .optional()
     .or(z.literal("")),
   country: z.string().optional(),
@@ -59,10 +82,56 @@ const verificationSchema = z.object({
 });
 
 // Esquema completo de registro
-const registerSchema = accountSchema
-  .merge(companySchema)
-  .merge(sustainabilitySchema)
-  .merge(verificationSchema);
+const registerSchema = z
+  .object({
+    // Campos de cuenta
+    email: z.string().email("Por favor, introduce un email válido"),
+    password: z
+      .string()
+      .min(8, "La contraseña debe tener al menos 8 caracteres"),
+    confirmPassword: z.string(),
+    firstName: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+    lastName: z.string().min(2, "El apellido debe tener al menos 2 caracteres"),
+
+    // Campos de empresa
+    companyName: z.string().min(2, "El nombre de la empresa es requerido"),
+    companyLegalName: z.string().optional(),
+    taxId: z.string().optional(),
+    companySize: z
+      .string()
+      .min(1, "Por favor selecciona el tamaño de la empresa"),
+    industry: z.string().min(1, "Por favor selecciona una industria"),
+    website: z
+      .string()
+      .refine(urlValidator, "Por favor introduce una URL válida")
+      .optional()
+      .or(z.literal("")),
+    country: z.string().optional(),
+    address: z.string().optional(),
+
+    // Campos de sostenibilidad
+    sustainabilityLevel: z.string().optional(),
+    sustainabilityGoals: z.array(z.string()).optional(),
+    certifications: z.array(z.string()).optional(),
+    sustainabilityBudgetRange: z.string().optional(),
+    sustainabilityNotes: z.string().optional(),
+
+    // Campos de verificación
+    acceptTerms: z.boolean(),
+    acceptPrivacy: z.boolean(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  })
+  .refine((data) => data.acceptTerms === true, {
+    message: "Debes aceptar los términos y condiciones",
+    path: ["acceptTerms"],
+  })
+  .refine((data) => data.acceptPrivacy === true, {
+    message: "Debes aceptar la política de privacidad",
+    path: ["acceptPrivacy"],
+  });
 
 // Opciones para los campos de selección
 const companySizeOptions = [
@@ -243,23 +312,33 @@ export default function RegisterForm() {
   // Validar los datos según el paso actual
   const validate = (currentStep: number) => {
     try {
-      let schemaToValidate;
       let dataToValidate;
 
       switch (currentStep) {
         case 1:
-          schemaToValidate = accountSchema;
           dataToValidate = {
             email: formData.email,
             password: formData.password,
             confirmPassword: formData.confirmPassword,
             firstName: formData.firstName,
             lastName: formData.lastName,
+            // Incluimos datos falsos para el resto del esquema
+            companyName: "temp",
+            companySize: "temp",
+            industry: "temp",
+            acceptTerms: true,
+            acceptPrivacy: true,
           };
           break;
         case 2:
-          schemaToValidate = companySchema;
           dataToValidate = {
+            // Incluimos datos del paso 1 que ya fueron validados
+            email: formData.email,
+            password: formData.password,
+            confirmPassword: formData.confirmPassword,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            // Datos del paso actual
             companyName: formData.companyName,
             companyLegalName: formData.companyLegalName,
             taxId: formData.taxId,
@@ -268,30 +347,50 @@ export default function RegisterForm() {
             website: formData.website,
             country: formData.country,
             address: formData.address,
+            // Incluimos datos falsos para el resto del esquema
+            acceptTerms: true,
+            acceptPrivacy: true,
           };
           break;
         case 3:
-          schemaToValidate = sustainabilitySchema;
           dataToValidate = {
+            // Incluimos datos previos que ya fueron validados
+            email: formData.email,
+            password: formData.password,
+            confirmPassword: formData.confirmPassword,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            companyName: formData.companyName,
+            companyLegalName: formData.companyLegalName,
+            taxId: formData.taxId,
+            companySize: formData.companySize,
+            industry: formData.industry,
+            website: formData.website,
+            country: formData.country,
+            address: formData.address,
+            // Datos del paso actual
             sustainabilityLevel: formData.sustainabilityLevel,
             sustainabilityGoals: formData.sustainabilityGoals,
             certifications: formData.certifications,
             sustainabilityBudgetRange: formData.sustainabilityBudgetRange,
             sustainabilityNotes: formData.sustainabilityNotes,
+            // Incluimos datos falsos para el resto del esquema
+            acceptTerms: true,
+            acceptPrivacy: true,
           };
           break;
         case 4:
-          schemaToValidate = verificationSchema;
-          dataToValidate = {
-            acceptTerms: formData.acceptTerms,
-            acceptPrivacy: formData.acceptPrivacy,
-          };
+          // En el último paso validamos el formulario completo
+          dataToValidate = formData;
           break;
         default:
           return false;
       }
 
-      schemaToValidate.parse(dataToValidate);
+      // Validación parcial según el paso
+      registerSchema.parse(dataToValidate);
+
+      // Si pasó la validación, limpiamos errores
       setErrors({});
       return true;
     } catch (error) {
@@ -299,7 +398,40 @@ export default function RegisterForm() {
         const newErrors: Record<string, string> = {};
         error.errors.forEach((err) => {
           if (err.path[0]) {
-            newErrors[err.path[0] as string] = err.message;
+            // Solo mostramos errores de los campos relevantes para el paso actual
+            if (
+              (step === 1 &&
+                [
+                  "email",
+                  "password",
+                  "confirmPassword",
+                  "firstName",
+                  "lastName",
+                ].includes(String(err.path[0]))) ||
+              (step === 2 &&
+                [
+                  "companyName",
+                  "companyLegalName",
+                  "taxId",
+                  "companySize",
+                  "industry",
+                  "website",
+                  "country",
+                  "address",
+                ].includes(String(err.path[0]))) ||
+              (step === 3 &&
+                [
+                  "sustainabilityLevel",
+                  "sustainabilityGoals",
+                  "certifications",
+                  "sustainabilityBudgetRange",
+                  "sustainabilityNotes",
+                ].includes(String(err.path[0]))) ||
+              (step === 4 &&
+                ["acceptTerms", "acceptPrivacy"].includes(String(err.path[0])))
+            ) {
+              newErrors[err.path[0] as string] = err.message;
+            }
           }
         });
         setErrors(newErrors);
@@ -334,6 +466,12 @@ export default function RegisterForm() {
       // Preparar datos para enviar
       const dataToSend = {
         ...formData,
+        // Asegurarnos de que la URL tenga protocolo
+        website: formData.website
+          ? formData.website.match(/^https?:\/\//i)
+            ? formData.website
+            : `https://${formData.website}`
+          : "",
         sustainabilityGoals:
           formData.sustainabilityGoals.length > 0
             ? formData.sustainabilityGoals
@@ -633,8 +771,8 @@ export default function RegisterForm() {
           <input
             id="website"
             name="website"
-            type="url"
-            placeholder="https://ejemplo.com"
+            type="text"
+            placeholder="www.ejemplo.com o https://ejemplo.com"
             className={`input w-full ${errors.website ? "border-red-500" : ""}`}
             value={formData.website}
             onChange={handleChange}
@@ -643,6 +781,9 @@ export default function RegisterForm() {
           {errors.website && (
             <p className="text-red-500 text-sm mt-1">{errors.website}</p>
           )}
+          <p className="text-xs text-grey-stone mt-1">
+            Puedes introducir la URL con o sin https://
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">

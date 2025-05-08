@@ -2,30 +2,31 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies for bcrypt
-RUN apk add --no-cache python3 make g++
+# Instalar dependencias de compilación para módulos nativos (argon2)
+RUN apk add --no-cache python3 make g++ git
 
-# Install dependencies
+# Copiar archivos de configuración
 COPY package.json yarn.lock* ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/database/package.json ./packages/database/
 COPY packages/connectors/package.json ./packages/connectors/
 COPY apps/api/package.json ./apps/api/
 
+# Instalar dependencias
 RUN yarn install --frozen-lockfile
 
-# Instalar bcrypt explícitamente en el workspace de API
-RUN yarn workspace @cosmo/api add bcrypt @types/bcrypt
+# Instalar argon2 y bcryptjs con las dependencias necesarias 
+RUN yarn workspace @cosmo/api add argon2 bcryptjs dotenv 
 
-# Copy source
+# Copiar código fuente
 COPY . .
 
-# Ensure dist directory is clean before starting
+# Limpiar directorio de compilación
 RUN rm -rf /app/apps/api/dist
 
-# For development, we'll use the dev script directly
+# Para desarrollo, usamos el script de dev directamente
 CMD ["yarn", "workspace", "@cosmo/api", "dev"]
 
-# For production builds, we would use:
+# Para producción, usaríamos:
 # RUN yarn workspace @cosmo/api build
 # CMD ["yarn", "workspace", "@cosmo/api", "start:prod"] 

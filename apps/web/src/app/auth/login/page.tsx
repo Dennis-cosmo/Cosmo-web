@@ -1,5 +1,5 @@
-import LoginForm from "@/components/auth/LoginForm";
 import { Metadata } from "next";
+import LoginForm from "../../../components/auth/LoginForm";
 
 export const metadata: Metadata = {
   title: "Iniciar sesión | Cosmo",
