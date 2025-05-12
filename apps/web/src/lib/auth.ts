@@ -12,10 +12,19 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.error("Credenciales incompletas:", {
+            email: !!credentials?.email,
+            password: !!credentials?.password,
+          });
           return null;
         }
 
         try {
+          console.log(`Intentando login para: ${credentials.email}`);
+          console.log(
+            `URL de la API: ${process.env.NEXT_PUBLIC_API_URL}/auth/login`
+          );
+
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
             {
@@ -31,11 +40,21 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!response.ok) {
-            console.error("Login failed:", await response.text());
+            const errorText = await response.text();
+            console.error("Login failed:", {
+              status: response.status,
+              statusText: response.statusText,
+              body: errorText,
+            });
             return null;
           }
 
           const data = await response.json();
+          console.log("Login exitoso:", {
+            userId: data.user?.id,
+            email: data.user?.email,
+            tokenReceived: !!data.accessToken,
+          });
 
           if (data && data.accessToken) {
             return {
@@ -51,6 +70,7 @@ export const authOptions: NextAuthOptions = {
             };
           }
 
+          console.error("Datos de respuesta incompletos:", data);
           return null;
         } catch (error) {
           console.error("Auth error:", error);
@@ -98,6 +118,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 días
   },
+  debug: process.env.NODE_ENV === "development",
 };
 
 export default NextAuth(authOptions);

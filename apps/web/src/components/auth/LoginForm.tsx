@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 
 // Esquema de validación
@@ -13,6 +13,17 @@ const loginSchema = z.object({
 
 export default function LoginForm() {
   const router = useRouter();
+  const { status } = useSession();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+
+  // Si el usuario ya está autenticado, redirigir al dashboard
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/dashboard");
+    }
+  }, [status, router]);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -35,6 +46,11 @@ export default function LoginForm() {
         delete newErrors[name];
         return newErrors;
       });
+    }
+
+    // Siempre limpiamos el error general al modificar cualquier campo
+    if (generalError) {
+      setGeneralError("");
     }
   };
 
@@ -67,28 +83,48 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
+      console.log("Intentando iniciar sesión con:", formData.email);
+
+      // Intentamos iniciar sesión
       const result = await signIn("credentials", {
         redirect: false,
         email: formData.email,
         password: formData.password,
       });
 
+      console.log("Resultado de signIn:", result);
+
       if (result?.error) {
-        setGeneralError(
-          "Credenciales incorrectas. Por favor, inténtalo de nuevo."
-        );
-      } else {
-        router.push("/dashboard");
+        console.error("Error al iniciar sesión:", result.error);
+        setGeneralError(result.error);
+        setErrors((prev) => ({
+          ...prev,
+          password: " ", // Un espacio para activar el estilo de error sin mostrar mensaje
+        }));
+      } else if (result?.ok) {
+        console.log("Inicio de sesión exitoso, redirigiendo a:", callbackUrl);
+        router.push(callbackUrl);
+        router.refresh();
       }
     } catch (error) {
+      console.error("Error inesperado al iniciar sesión:", error);
       setGeneralError(
-        "Ha ocurrido un error. Por favor, inténtalo de nuevo más tarde."
+        "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde."
       );
-      console.error("Error de inicio de sesión:", error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Si ya está autenticado, mostrar un mensaje de redirección
+  if (status === "authenticated") {
+    return (
+      <div className="text-center py-8">
+        <p className="mb-2">Ya has iniciado sesión</p>
+        <p className="text-grey-stone">Redirigiendo al dashboard...</p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -116,7 +152,7 @@ export default function LoginForm() {
           onChange={handleChange}
           disabled={isLoading}
         />
-        {errors.email && (
+        {errors.email && errors.email.trim() && (
           <p className="text-red-500 text-sm mt-1">{errors.email}</p>
         )}
       </div>
@@ -144,7 +180,7 @@ export default function LoginForm() {
           onChange={handleChange}
           disabled={isLoading}
         />
-        {errors.password && (
+        {errors.password && errors.password.trim() && (
           <p className="text-red-500 text-sm mt-1">{errors.password}</p>
         )}
       </div>
@@ -183,6 +219,12 @@ export default function LoginForm() {
             "Iniciar sesión"
           )}
         </button>
+      </div>
+
+      <div className="text-xs text-gray-500 mt-4">
+        <p>Credenciales de prueba:</p>
+        <p>Email: prueba@test.com</p>
+        <p>Contraseña: Contraseña123!</p>
       </div>
     </form>
   );

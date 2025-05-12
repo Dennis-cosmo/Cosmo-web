@@ -4,11 +4,38 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
+import React from "react";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { data: session, status } = useSession();
+  const pathname = usePathname();
   const isAuthenticated = status === "authenticated";
+
+  const isActive = (path: string) => {
+    if (path === "/") {
+      return pathname === path;
+    }
+    return pathname.startsWith(path);
+  };
+
+  // Cerrar el menú del perfil al hacer clic fuera
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (!target.closest(".profile-menu-container")) {
+      setIsProfileMenuOpen(false);
+    }
+  };
+
+  // Agregar y remover el event listener
+  React.useEffect(() => {
+    document.addEventListener("click", handleClickOutside);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="bg-deep-space text-pure-white">
@@ -24,22 +51,45 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-4">
-            <Link href="/" className="nav-link-active">
+            <Link
+              href="/"
+              className={isActive("/") ? "nav-link-active" : "nav-link"}
+            >
               Inicio
             </Link>
 
             {isAuthenticated && (
               <>
-                <Link href="/dashboard" className="nav-link">
+                <Link
+                  href="/dashboard"
+                  className={
+                    isActive("/dashboard") ? "nav-link-active" : "nav-link"
+                  }
+                >
                   Dashboard
                 </Link>
-                <Link href="/expenses" className="nav-link">
+                <Link
+                  href="/expenses"
+                  className={
+                    isActive("/expenses") ? "nav-link-active" : "nav-link"
+                  }
+                >
                   Gastos
                 </Link>
-                <Link href="/reports" className="nav-link">
+                <Link
+                  href="/reports"
+                  className={
+                    isActive("/reports") ? "nav-link-active" : "nav-link"
+                  }
+                >
                   Reportes
                 </Link>
-                <Link href="/integrations" className="nav-link">
+                <Link
+                  href="/integrations"
+                  className={
+                    isActive("/integrations") ? "nav-link-active" : "nav-link"
+                  }
+                >
                   Integraciones
                 </Link>
               </>
@@ -53,8 +103,11 @@ export default function Header() {
                 <span className="text-sm">
                   Hola, {session?.user?.firstName || "Usuario"}
                 </span>
-                <div className="relative group">
-                  <button className="flex items-center space-x-1 text-pure-white hover:text-lime-accent">
+                <div className="relative profile-menu-container">
+                  <button
+                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                    className="flex items-center space-x-1 text-pure-white hover:text-lime-accent"
+                  >
                     <div className="w-8 h-8 rounded-full bg-grey-stone flex items-center justify-center overflow-hidden">
                       {session?.user?.firstName && (
                         <span className="text-xs font-medium">
@@ -65,7 +118,7 @@ export default function Header() {
                     </div>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
+                      className={`h-4 w-4 transition-transform ${isProfileMenuOpen ? "rotate-180" : ""}`}
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
@@ -76,26 +129,36 @@ export default function Header() {
                       />
                     </svg>
                   </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-cosmo-800 rounded-md shadow-lg py-1 hidden group-hover:block z-10">
-                    <Link
-                      href="/dashboard"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-pure-white hover:bg-gray-100 dark:hover:bg-cosmo-700"
-                    >
-                      Perfil
-                    </Link>
-                    <Link
-                      href="/settings"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-pure-white hover:bg-gray-100 dark:hover:bg-cosmo-700"
-                    >
-                      Configuración
-                    </Link>
-                    <button
-                      onClick={() => signOut({ callbackUrl: "/" })}
-                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-pure-white hover:bg-gray-100 dark:hover:bg-cosmo-700"
-                    >
-                      Cerrar sesión
-                    </button>
-                  </div>
+                  {isProfileMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-cosmo-800 rounded-md shadow-lg py-1 z-10">
+                      <Link
+                        href="/dashboard"
+                        className={`block px-4 py-2 text-sm text-gray-700 dark:text-pure-white hover:bg-gray-100 dark:hover:bg-cosmo-700 ${
+                          isActive("/dashboard")
+                            ? "bg-gray-100 dark:bg-cosmo-700"
+                            : ""
+                        }`}
+                      >
+                        Perfil
+                      </Link>
+                      <Link
+                        href="/settings"
+                        className={`block px-4 py-2 text-sm text-gray-700 dark:text-pure-white hover:bg-gray-100 dark:hover:bg-cosmo-700 ${
+                          isActive("/settings")
+                            ? "bg-gray-100 dark:bg-cosmo-700"
+                            : ""
+                        }`}
+                      >
+                        Configuración
+                      </Link>
+                      <button
+                        onClick={() => signOut({ callbackUrl: "/" })}
+                        className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-pure-white hover:bg-gray-100 dark:hover:bg-cosmo-700"
+                      >
+                        Cerrar sesión
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -152,7 +215,11 @@ export default function Header() {
           <div className="px-2 py-3 space-y-1">
             <Link
               href="/"
-              className="block px-3 py-2 text-lime-accent font-medium"
+              className={`block px-3 py-2 ${
+                isActive("/")
+                  ? "text-lime-accent font-medium"
+                  : "text-pure-white hover:text-lime-accent"
+              }`}
             >
               Inicio
             </Link>
@@ -161,25 +228,41 @@ export default function Header() {
               <>
                 <Link
                   href="/dashboard"
-                  className="block px-3 py-2 text-pure-white hover:text-lime-accent"
+                  className={`block px-3 py-2 ${
+                    isActive("/dashboard")
+                      ? "text-lime-accent font-medium"
+                      : "text-pure-white hover:text-lime-accent"
+                  }`}
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/expenses"
-                  className="block px-3 py-2 text-pure-white hover:text-lime-accent"
+                  className={`block px-3 py-2 ${
+                    isActive("/expenses")
+                      ? "text-lime-accent font-medium"
+                      : "text-pure-white hover:text-lime-accent"
+                  }`}
                 >
                   Gastos
                 </Link>
                 <Link
                   href="/reports"
-                  className="block px-3 py-2 text-pure-white hover:text-lime-accent"
+                  className={`block px-3 py-2 ${
+                    isActive("/reports")
+                      ? "text-lime-accent font-medium"
+                      : "text-pure-white hover:text-lime-accent"
+                  }`}
                 >
                   Reportes
                 </Link>
                 <Link
                   href="/integrations"
-                  className="block px-3 py-2 text-pure-white hover:text-lime-accent"
+                  className={`block px-3 py-2 ${
+                    isActive("/integrations")
+                      ? "text-lime-accent font-medium"
+                      : "text-pure-white hover:text-lime-accent"
+                  }`}
                 >
                   Integraciones
                 </Link>
@@ -189,13 +272,21 @@ export default function Header() {
                   </div>
                   <Link
                     href="/dashboard"
-                    className="block px-3 py-2 text-pure-white hover:text-lime-accent"
+                    className={`block px-3 py-2 ${
+                      isActive("/dashboard")
+                        ? "text-lime-accent font-medium"
+                        : "text-pure-white hover:text-lime-accent"
+                    }`}
                   >
                     Perfil
                   </Link>
                   <Link
                     href="/settings"
-                    className="block px-3 py-2 text-pure-white hover:text-lime-accent"
+                    className={`block px-3 py-2 ${
+                      isActive("/settings")
+                        ? "text-lime-accent font-medium"
+                        : "text-pure-white hover:text-lime-accent"
+                    }`}
                   >
                     Configuración
                   </Link>

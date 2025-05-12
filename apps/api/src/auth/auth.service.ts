@@ -56,68 +56,144 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.usersRepository.findOne({ where: { email } });
-    if (!user) {
-      throw new UnauthorizedException("Email o contraseña incorrectos");
-    }
-
-    let isPasswordValid = false;
-    const hashedPassword = user.passwordHash;
-
     try {
-      // Primero verificar si es un hash SHA-256 antiguo
+      // Normalizar el email
+      const normalizedEmail = email.toLowerCase().trim();
+      this.logger.log(`Intentando autenticar usuario: ${normalizedEmail}`);
+
+      const user = await this.usersRepository.findOne({
+        where: { email: normalizedEmail },
+      });
+
+      if (!user) {
+        this.logger.warn(
+          `Intento de login fallido para email inexistente: ${normalizedEmail}`
+        );
+        // Usar un tiempo constante para evitar timing attacks
+        await bcryptjs.compare(password, "$2a$12$" + "a".repeat(53));
+        throw new UnauthorizedException("Email o contraseña incorrectos");
+      }
+
+      this.logger.log(`Usuario encontrado: ${normalizedEmail}, ID: ${user.id}`);
+      this.logger.log(`Hash almacenado: ${user.passwordHash}`);
+
+      // Verificar si el usuario está activo
+      if (user.status !== "active") {
+        this.logger.warn(
+          `Intento de login para cuenta ${user.status}: ${normalizedEmail}`
+        );
+        throw new UnauthorizedException(
+          user.status === "suspended"
+            ? "Tu cuenta ha sido suspendida. Contacta con soporte."
+            : "Tu cuenta no está activa."
+        );
+      }
+
+      let isPasswordValid = false;
+      const hashedPassword = user.passwordHash;
+
+      // Comprobar formato del hash
       if (hashedPassword.startsWith(SHA256_PREFIX)) {
+        // Formato antiguo SHA-256 con prefijo
         this.logger.log(
-          `Detectado hash SHA-256 antiguo para el usuario ${user.id}`
+          `Detectado hash SHA-256 antiguo para usuario ${user.id}`
         );
         isPasswordValid = comparePasswordSha256(password, hashedPassword);
 
-        // Si la contraseña es válida, actualizar al nuevo formato
+        // Actualizar al nuevo formato si la contraseña es válida
         if (isPasswordValid) {
-          try {
-            // Actualizar silenciosamente al nuevo formato
-            await this.updatePasswordHash(user.id, password);
-            this.logger.log(
-              `Hash de contraseña actualizado para usuario ${user.id}`
-            );
-          } catch (error) {
-            this.logger.error(
-              `Error al actualizar hash: ${error instanceof Error ? error.message : String(error)}`
-            );
-            // No interrumpimos el flujo de login, solo registramos el error
-          }
+          await this.updatePasswordHash(user.id, password);
+          this.logger.log(`Hash actualizado a bcrypt para usuario ${user.id}`);
+        }
+      } else if (hashedPassword.startsWith("$2")) {
+        // Formato bcrypt estándar (sin prefijo)
+        this.logger.log(`Comprobando con formato bcrypt estándar`);
+        try {
+          isPasswordValid = await bcryptjs.compare(password, hashedPassword);
+          this.logger.log(
+            `Resultado bcrypt estándar: ${isPasswordValid ? "VÁLIDO" : "INVÁLIDO"}`
+          );
+        } catch (error) {
+          this.logger.error(
+            `Error en bcrypt.compare: ${error instanceof Error ? error.message : String(error)}`
+          );
+          isPasswordValid = false;
         }
       } else if (hashedPassword.startsWith(BCRYPT_PREFIX)) {
-        // Verificar con bcryptjs
-        const actualHash = hashedPassword.substring(BCRYPT_PREFIX.length);
-        isPasswordValid = await bcryptjs.compare(password, actualHash);
-      } else {
-        // Asumimos que es un hash simple (temporal)
+        // Formato con prefijo bcrypt: (LEGACY - Por compatibilidad)
         try {
-          // Intentar con hash simple como respaldo
+          const actualHash = hashedPassword.substring(BCRYPT_PREFIX.length);
+          this.logger.log(`Quitando prefijo bcrypt: para usuario ${user.id}`);
+          this.logger.log(`Hash original: ${hashedPassword}`);
+          this.logger.log(`Hash sin prefijo: ${actualHash}`);
+
+          isPasswordValid = await bcryptjs.compare(password, actualHash);
+          this.logger.log(
+            `Resultado de validación: ${isPasswordValid ? "VÁLIDO" : "INVÁLIDO"}`
+          );
+
+          // Actualizar al formato estándar si la autenticación es exitosa
+          if (isPasswordValid) {
+            await this.usersRepository.update(user.id, {
+              passwordHash: actualHash,
+            });
+            this.logger.log(
+              `Prefijo bcrypt: eliminado para usuario ${user.id}`
+            );
+          }
+        } catch (error) {
+          this.logger.error(
+            `Error al verificar hash con prefijo bcrypt:: ${error instanceof Error ? error.message : String(error)}`
+          );
+          isPasswordValid = false;
+        }
+      } else {
+        // Último recurso: probar si es un hash simple SHA-256 sin prefijo
+        this.logger.log(`Probando formato hash desconocido o sin prefijo`);
+
+        // Primero intentar bcrypt en caso de que el hash sea bcrypt pero no se reconozca por el formato
+        try {
+          isPasswordValid = await bcryptjs.compare(password, hashedPassword);
+          this.logger.log(
+            `Intento directo con bcrypt: ${isPasswordValid ? "VÁLIDO" : "INVÁLIDO"}`
+          );
+        } catch (error) {
+          this.logger.log(
+            `Error al intentar comparar con bcrypt, probando SHA-256: ${error instanceof Error ? error.message : String(error)}`
+          );
+          isPasswordValid = false;
+        }
+
+        // Si bcrypt falla, intentar con SHA-256
+        if (!isPasswordValid) {
           const simpleSha256 = crypto
             .createHash("sha256")
             .update(password)
             .digest("hex");
           isPasswordValid = hashedPassword === simpleSha256;
+          this.logger.log(
+            `Intento con SHA-256 simple: ${isPasswordValid ? "VÁLIDO" : "INVÁLIDO"}`
+          );
 
-          // Si esta verificación es exitosa, actualizar al formato seguro
+          // Actualizar si la autenticación es exitosa
           if (isPasswordValid) {
             await this.updatePasswordHash(user.id, password);
+            this.logger.log(
+              `Hash SHA-256 sin prefijo actualizado a bcrypt para usuario ${user.id}`
+            );
           }
-        } catch (error) {
-          this.logger.error(
-            `Error al verificar contraseña: ${error instanceof Error ? error.message : String(error)}`
-          );
-          isPasswordValid = false;
         }
       }
 
       if (!isPasswordValid) {
+        this.logger.warn(
+          `Contraseña inválida para usuario: ${normalizedEmail}`
+        );
         throw new UnauthorizedException("Email o contraseña incorrectos");
       }
 
-      // No enviamos el passwordHash en la respuesta
+      // Login exitoso
+      this.logger.log(`Login exitoso para usuario: ${normalizedEmail}`);
       const { passwordHash, ...result } = user;
       return result;
     } catch (error) {
@@ -125,42 +201,26 @@ export class AuthService {
         throw error;
       }
       this.logger.error(
-        `Error inesperado en autenticación: ${error instanceof Error ? error.message : String(error)}`
+        `Error en autenticación: ${error instanceof Error ? error.message : String(error)}`
       );
       throw new UnauthorizedException("Error en la autenticación");
     }
   }
 
-  // Método para actualizar el hash de la contraseña al nuevo formato
   private async updatePasswordHash(
     userId: string,
     plainPassword: string
   ): Promise<void> {
     try {
-      const newHash = await this.hashPassword(plainPassword);
-      await this.usersRepository.update(userId, { passwordHash: newHash });
+      // Generar hash bcrypt sin prefijo (estándar)
+      const salt = await bcryptjs.genSalt(12);
+      const hash = await bcryptjs.hash(plainPassword, salt);
+      await this.usersRepository.update(userId, { passwordHash: hash });
       this.logger.log(`Hash de contraseña actualizado para usuario ${userId}`);
     } catch (error) {
       this.logger.error(
-        `Error al actualizar hash de contraseña: ${error instanceof Error ? error.message : String(error)}`
+        `Error al actualizar hash: ${error instanceof Error ? error.message : String(error)}`
       );
-      // No lanzamos error para no interrumpir el flujo de login
-    }
-  }
-
-  // Método seguro para crear hash
-  private async hashPassword(password: string): Promise<string> {
-    try {
-      // Usar bcryptjs (más compatible)
-      const salt = await bcryptjs.genSalt(12); // 12 rondas es un buen balance entre seguridad y rendimiento
-      const hash = await bcryptjs.hash(password, salt);
-      return BCRYPT_PREFIX + hash;
-    } catch (bcryptError) {
-      this.logger.error(
-        `Error al hashear contraseña con bcryptjs: ${bcryptError instanceof Error ? bcryptError.message : String(bcryptError)}`
-      );
-      // Fallback a SHA-256 como último recurso, pero con prefijo para identificarlo
-      return hashPasswordSha256(password);
     }
   }
 
@@ -168,17 +228,21 @@ export class AuthService {
     try {
       const user = await this.validateUser(loginDto.email, loginDto.password);
 
+      // Crear token JWT
       const payload = {
         sub: user.id,
         email: user.email,
         isAdmin: user.isAdmin,
       };
 
-      // Tratar al usuario como un objeto genérico para evitar problemas de tipo
-      const extendedUser = user as ExtendedUser;
+      const expiresIn =
+        this.configService.get<string>("JWT_EXPIRATION") || "7d";
+      const accessToken = this.jwtService.sign(payload, { expiresIn });
 
+      // Devolver información mínima necesaria
+      const extendedUser = user as ExtendedUser;
       return {
-        accessToken: this.jwtService.sign(payload),
+        accessToken,
         user: {
           id: user.id,
           email: user.email,
@@ -218,30 +282,47 @@ export class AuthService {
         );
       }
 
-      // Creamos el hash seguro de la contraseña
+      // Crear hash bcrypt estándar (sin prefijo)
       let passwordHash;
       try {
-        passwordHash = await this.hashPassword(registerDto.password);
+        const salt = await bcryptjs.genSalt(12);
+        passwordHash = await bcryptjs.hash(registerDto.password, salt);
+
+        // Asegurarse que no tenga prefijo
+        if (passwordHash.startsWith(BCRYPT_PREFIX)) {
+          passwordHash = passwordHash.substring(BCRYPT_PREFIX.length);
+        }
       } catch (error) {
         this.logger.error(
           `Error al hashear contraseña: ${error instanceof Error ? error.message : String(error)}`
         );
-        // En caso de error, usar SHA-256 como fallback
+        // En caso de error, usar SHA-256 como fallback (aún con prefijo para identificarlo)
         passwordHash = hashPasswordSha256(registerDto.password);
       }
 
-      // Generamos un token de verificación
+      // Generar token de verificación
       const verificationToken = crypto.randomBytes(32).toString("hex");
       const verificationTokenExpiry = new Date();
-      verificationTokenExpiry.setHours(verificationTokenExpiry.getHours() + 24); // 24 horas de validez
+      verificationTokenExpiry.setHours(verificationTokenExpiry.getHours() + 24);
 
+      // Crear y guardar el usuario
       try {
-        // Crear un usuario básico como objeto y asignar propiedades
-        // Usamos Record<string, any> para evitar errores de tipado estricto
+        // Procesar arrays correctamente
+        const sustainabilityGoals = Array.isArray(
+          registerDto.sustainabilityGoals
+        )
+          ? registerDto.sustainabilityGoals
+          : [];
+
+        const certifications = Array.isArray(registerDto.certifications)
+          ? registerDto.certifications
+          : [];
+
+        // Crear usuario
         const user = new User();
         const userWithAllFields = user as User & Record<string, any>;
 
-        // Asignar propiedades básicas
+        // Propiedades básicas
         userWithAllFields.email = registerDto.email;
         userWithAllFields.passwordHash = passwordHash;
         userWithAllFields.firstName = registerDto.firstName;
@@ -268,37 +349,37 @@ export class AuthService {
           userWithAllFields.country = registerDto.country;
         if (registerDto.address)
           userWithAllFields.address = registerDto.address;
-        if (registerDto.sustainabilityLevel)
+
+        // Campos de sostenibilidad
+        if (registerDto.sustainabilityLevel) {
           userWithAllFields.sustainabilityLevel =
             registerDto.sustainabilityLevel;
-        if (registerDto.sustainabilityGoals)
-          userWithAllFields.sustainabilityGoals =
-            registerDto.sustainabilityGoals;
-        if (registerDto.certifications)
-          userWithAllFields.certifications = registerDto.certifications;
-        if (registerDto.sustainabilityBudgetRange)
+        }
+
+        // Asignar arrays procesados
+        userWithAllFields.sustainabilityGoals = sustainabilityGoals;
+        userWithAllFields.certifications = certifications;
+
+        if (registerDto.sustainabilityBudgetRange) {
           userWithAllFields.sustainabilityBudgetRange =
             registerDto.sustainabilityBudgetRange;
-        if (registerDto.sustainabilityNotes)
+        }
+
+        if (registerDto.sustainabilityNotes) {
           userWithAllFields.sustainabilityNotes =
             registerDto.sustainabilityNotes;
+        }
 
-        // Guardar usuario completo de una sola vez
+        // Guardar usuario
         const savedUser = await this.usersRepository.save(userWithAllFields);
 
-        // Aquí enviaríamos el email de verificación
+        // Enviar email de verificación
         this.sendVerificationEmail(savedUser.email, verificationToken);
 
-        // Retornamos el usuario creado (sin la contraseña)
+        // Devolver el usuario creado (sin la contraseña)
         const { passwordHash: _, ...result } = savedUser;
         return result;
       } catch (typeormError) {
-        // Capturar errores específicos de TypeORM
-        this.logger.error(
-          `Error específico de TypeORM: ${typeormError instanceof Error ? typeormError.message : String(typeormError)}`
-        );
-
-        // Si el error contiene "metadata", probablemente sea un problema con la entidad
         if (
           typeormError instanceof Error &&
           typeormError.message.includes("metadata")
@@ -307,8 +388,6 @@ export class AuthService {
             `Error en la entidad User. Detalles: ${typeormError.message}`
           );
         }
-
-        // Re-lanzar el error original
         throw typeormError;
       }
     } catch (error) {

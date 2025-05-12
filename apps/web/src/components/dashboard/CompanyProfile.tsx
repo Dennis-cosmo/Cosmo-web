@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
 
 interface CompanyProfileData {
   id: string;
@@ -25,60 +24,59 @@ interface CompanyProfileData {
   createdAt: string;
 }
 
-// Mapeo para mostrar nombres legibles
+// Mapeo de valores clave para mostrar nombres legibles
 const industryNames: Record<string, string> = {
   technology: "Tecnología",
-  manufacturing: "Manufactura",
+  manufacturing: "Fabricación",
   retail: "Comercio minorista",
+  services: "Servicios",
   healthcare: "Salud",
-  financial: "Servicios financieros",
-  energy: "Energía",
-  agriculture: "Agricultura",
-  construction: "Construcción",
-  transportation: "Transporte y logística",
-  hospitality: "Hostelería y turismo",
   education: "Educación",
-  consulting: "Consultoría",
+  finance: "Servicios financieros",
+  energy: "Energía",
+  construction: "Construcción",
+  agriculture: "Agricultura",
+  transportation: "Transporte",
+  hospitality: "Hostelería",
+  media: "Medios de comunicación",
   other: "Otro",
 };
 
 const sustainabilityLevelNames: Record<string, string> = {
-  beginner: "Principiante - Comenzando el viaje de sostenibilidad",
-  intermediate: "Intermedio - Implementando algunas prácticas",
-  advanced: "Avanzado - Programa de sostenibilidad establecido",
-  leader: "Líder - Referente en sostenibilidad en la industria",
+  beginner: "Principiante",
+  intermediate: "Intermedio",
+  advanced: "Avanzado",
+  leader: "Líder",
 };
 
 const sustainabilityGoalNames: Record<string, string> = {
-  carbon_reduction: "Reducción de huella de carbono",
+  carbon_reduction: "Reducción de carbono",
   waste_reduction: "Reducción de residuos",
-  renewable_energy: "Transición a energías renovables",
+  energy_efficiency: "Eficiencia energética",
   water_conservation: "Conservación del agua",
-  sustainable_supply: "Cadena de suministro sostenible",
+  sustainable_sourcing: "Abastecimiento sostenible",
+  biodiversity: "Biodiversidad",
   circular_economy: "Economía circular",
-  esg_reporting: "Informes ESG",
-  employee_wellbeing: "Bienestar de empleados",
-  community_impact: "Impacto en la comunidad",
+  social_responsibility: "Responsabilidad social",
+  other: "Otro",
 };
 
 const certificationNames: Record<string, string> = {
-  iso14001: "ISO 14001 - Gestión Ambiental",
+  iso14001: "ISO 14001",
+  iso50001: "ISO 50001",
   bcorp: "B Corp",
-  iso50001: "ISO 50001 - Gestión de Energía",
-  ecolabel: "EU Ecolabel",
-  fairtrade: "Fairtrade",
-  leed: "LEED",
-  energystar: "Energy Star",
-  greenguard: "GREENGUARD",
-  fsc: "FSC (Forest Stewardship Council)",
+  euEcolabel: "EU Ecolabel",
+  ecovadis: "EcoVadis",
+  cdp: "CDP",
+  other: "Otro",
 };
 
 const budgetRangeNames: Record<string, string> = {
-  less_5000: "Menos de 5.000€ al año",
-  "5000_20000": "Entre 5.000€ y 20.000€ al año",
-  "20000_50000": "Entre 20.000€ y 50.000€ al año",
-  "50000_100000": "Entre 50.000€ y 100.000€ al año",
-  more_100000: "Más de 100.000€ al año",
+  under_5000: "Menos de €5.000",
+  "5000_20000": "€5.000 - €20.000",
+  "20000_50000": "€20.000 - €50.000",
+  "50000_100000": "€50.000 - €100.000",
+  over_100000: "Más de €100.000",
 };
 
 export default function CompanyProfile() {
@@ -122,8 +120,11 @@ export default function CompanyProfile() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[200px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-eco-green"></div>
+      <div className="animate-pulse">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 mb-2"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6 mb-2"></div>
       </div>
     );
   }
@@ -159,210 +160,88 @@ export default function CompanyProfile() {
   };
 
   return (
-    <div>
-      <div className="flex items-start justify-between mb-6">
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-eco-green/20 flex items-center justify-center text-eco-green font-medium text-lg">
+          {displayData.firstName.charAt(0)}
+          {displayData.lastName.charAt(0)}
+        </div>
         <div>
-          <h2 className="text-xl font-semibold">{displayData.companyName}</h2>
-          <p className="text-gray-500 dark:text-gray-400">
-            Usuario desde {new Date(displayData.createdAt).toLocaleDateString()}
+          <h3 className="font-medium text-gray-900 dark:text-white">
+            {displayData.firstName} {displayData.lastName}
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {displayData.email}
           </p>
         </div>
-        <button className="text-sm bg-eco-green hover:bg-lime-accent text-white py-2 px-4 rounded">
-          Editar perfil
-        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Información básica de la empresa */}
-        <section className="bg-gray-50 dark:bg-cosmo-700 rounded-lg p-4">
-          <h3 className="font-medium text-lg mb-3">Información de empresa</h3>
-          <div className="space-y-3">
-            <div>
-              <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                Nombre comercial
-              </span>
-              <span className="font-medium">{displayData.companyName}</span>
-            </div>
-
-            {displayData.companyLegalName && (
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                  Razón social
-                </span>
-                <span className="font-medium">
-                  {displayData.companyLegalName}
-                </span>
-              </div>
-            )}
-
-            {displayData.taxId && (
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                  CIF/NIF
-                </span>
-                <span className="font-medium">{displayData.taxId}</span>
-              </div>
-            )}
-
-            <div>
-              <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                Sector
-              </span>
-              <span className="font-medium">
-                {industryNames[displayData.industry] || displayData.industry}
-              </span>
-            </div>
-
-            {displayData.companySize && (
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                  Tamaño
-                </span>
-                <span className="font-medium">{displayData.companySize}</span>
-              </div>
-            )}
-
-            {displayData.website && (
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                  Sitio web
-                </span>
-                <a
-                  href={displayData.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-eco-green hover:underline font-medium"
-                >
-                  {displayData.website}
-                </a>
-              </div>
-            )}
-
-            {displayData.country && (
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                  País
-                </span>
-                <span className="font-medium">{displayData.country}</span>
-              </div>
-            )}
-
-            {displayData.address && (
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                  Dirección
-                </span>
-                <span className="font-medium">{displayData.address}</span>
-              </div>
-            )}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Empresa</p>
+            <p className="font-medium text-gray-900 dark:text-white">
+              {displayData.companyName}
+            </p>
           </div>
-        </section>
-
-        {/* Información de contacto */}
-        <section className="bg-gray-50 dark:bg-cosmo-700 rounded-lg p-4">
-          <h3 className="font-medium text-lg mb-3">Información de contacto</h3>
-          <div className="space-y-3">
-            <div>
-              <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                Contacto principal
-              </span>
-              <span className="font-medium">
-                {displayData.firstName} {displayData.lastName}
-              </span>
-            </div>
-
-            <div>
-              <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                Email
-              </span>
-              <span className="font-medium">{displayData.email}</span>
-            </div>
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Sector</p>
+            <p className="font-medium text-gray-900 dark:text-white">
+              {industryNames[displayData.industry] || displayData.industry}
+            </p>
           </div>
-        </section>
-
-        {/* Perfil de sostenibilidad */}
-        <section className="bg-gray-50 dark:bg-cosmo-700 rounded-lg p-4 lg:col-span-2">
-          <h3 className="font-medium text-lg mb-3">Perfil de sostenibilidad</h3>
-
-          <div className="space-y-4">
-            <div>
-              <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                Nivel de sostenibilidad
-              </span>
-              <div className="mt-2">
-                <div className="bg-lime-accent/10 text-eco-green py-1 px-3 rounded-full inline-flex items-center">
-                  <span className="w-2 h-2 bg-eco-green rounded-full mr-2"></span>
-                  <span>
-                    {sustainabilityLevelNames[
-                      displayData.sustainabilityLevel
-                    ] || displayData.sustainabilityLevel}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {displayData.sustainabilityGoals &&
-              displayData.sustainabilityGoals.length > 0 && (
-                <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 block mb-2">
-                    Objetivos de sostenibilidad
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {displayData.sustainabilityGoals.map((goal) => (
-                      <span
-                        key={goal}
-                        className="bg-gray-100 dark:bg-cosmo-600 py-1 px-2 rounded-md text-sm"
-                      >
-                        {sustainabilityGoalNames[goal] || goal}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-            {displayData.certifications &&
-              displayData.certifications.length > 0 && (
-                <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 block mb-2">
-                    Certificaciones
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {displayData.certifications.map((cert) => (
-                      <span
-                        key={cert}
-                        className="bg-gray-100 dark:bg-cosmo-600 py-1 px-2 rounded-md text-sm"
-                      >
-                        {certificationNames[cert] || cert}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-            {displayData.sustainabilityBudgetRange && (
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                  Presupuesto anual para sostenibilidad
-                </span>
-                <span className="font-medium">
-                  {budgetRangeNames[displayData.sustainabilityBudgetRange] ||
-                    displayData.sustainabilityBudgetRange}
-                </span>
-              </div>
-            )}
-
-            {displayData.sustainabilityNotes && (
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                  Notas adicionales
-                </span>
-                <p className="text-gray-700 dark:text-gray-300 text-sm mt-1">
-                  {displayData.sustainabilityNotes}
-                </p>
-              </div>
-            )}
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">País</p>
+            <p className="font-medium text-gray-900 dark:text-white">
+              {displayData.country}
+            </p>
           </div>
-        </section>
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Nivel sostenible
+            </p>
+            <p className="font-medium text-gray-900 dark:text-white">
+              {sustainabilityLevelNames[displayData.sustainabilityLevel] ||
+                displayData.sustainabilityLevel}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+          Objetivos de sostenibilidad
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {displayData.sustainabilityGoals.map((goal) => (
+            <span
+              key={goal}
+              className="bg-eco-green/10 text-eco-green text-xs py-1 px-2 rounded-full"
+            >
+              {sustainabilityGoalNames[goal] || goal}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+        <button className="text-sm text-eco-green hover:text-lime-accent flex items-center">
+          <svg
+            className="h-4 w-4 mr-1"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+            />
+          </svg>
+          Editar perfil completo
+        </button>
       </div>
     </div>
   );
