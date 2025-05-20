@@ -1,10 +1,19 @@
-import { Body, Controller, Post, UseGuards, Get, Logger } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Post,
+  UseGuards,
+  Get,
+  Logger,
+  Query,
+} from "@nestjs/common";
+import { ApiOperation, ApiResponse, ApiTags, ApiQuery } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ExpenseClassifierService } from "./services/expense-classifier.service";
 import { ExpenseClassificationDto } from "./dto/expense-classification.dto";
 import { TaxonomyClassificationResponse } from "./interfaces/ai-response.interface";
 import { AiService } from "./services/ai.service";
+import { AiProviderType } from "./services/ai-provider.factory";
 
 @ApiTags("ai")
 @Controller("ai")
@@ -50,49 +59,59 @@ export class AiController {
 
   @Get("test")
   @ApiOperation({
-    summary: "Prueba de conexión con OpenAI",
+    summary: "Prueba de conexión con IA (OpenAI o DeepSeek)",
   })
   @ApiResponse({
     status: 200,
     description: "Prueba de IA ejecutada correctamente",
     type: Object,
   })
-  async testAi(): Promise<{ success: boolean; result: any }> {
+  @ApiQuery({
+    name: "provider",
+    required: false,
+    enum: ["openai", "deepseek", "mock"],
+    description: "Proveedor de IA a utilizar",
+  })
+  async testAi(
+    @Query("provider") provider?: "openai" | "deepseek" | "mock"
+  ): Promise<{ success: boolean; result: any }> {
     try {
-      this.logger.log("Iniciando prueba de conexión con OpenAI...");
-
-      // Simulación de respuesta para evitar llamadas reales a OpenAI y errores 429
-      const mockResponse = {
-        isGreen: true,
-        taxonomyCategory: "Energía renovable",
-        taxonomyCode: "4.1",
-        confidenceScore: 0.95,
-        explanation: "Respuesta simulada para prueba del módulo de IA",
-        sustainableDevelopmentGoals: [
-          "ODS 7: Energía asequible y no contaminante",
-          "ODS 13: Acción por el clima",
-        ],
-        model: "gpt-4-mock",
-        usage: {
-          promptTokens: 150,
-          completionTokens: 100,
-          totalTokens: 250,
-        },
-        processingTime: 500,
-      };
-
       this.logger.log(
-        "Utilizando respuesta simulada para evitar límites de API:"
+        `Iniciando prueba de conexión con IA. Proveedor: ${provider || "predeterminado"}`
       );
-      this.logger.log(JSON.stringify(mockResponse, null, 2));
 
-      return {
-        success: true,
-        result: mockResponse,
-      };
+      // Si se solicita respuesta simulada, evitamos llamadas a la API
+      if (provider === "mock") {
+        // Simulación de respuesta para evitar llamadas reales a las API
+        const mockResponse = {
+          isGreen: true,
+          taxonomyCategory: "Energía renovable",
+          taxonomyCode: "4.1",
+          confidenceScore: 0.95,
+          explanation: "Respuesta simulada para prueba del módulo de IA",
+          sustainableDevelopmentGoals: [
+            "ODS 7: Energía asequible y no contaminante",
+            "ODS 13: Acción por el clima",
+          ],
+          model: "mock-model",
+          usage: {
+            promptTokens: 150,
+            completionTokens: 100,
+            totalTokens: 250,
+          },
+          processingTime: 500,
+        };
 
-      // Comentamos el código real para evitar errores 429
-      /*
+        this.logger.log(
+          "Utilizando respuesta simulada para evitar límites de API."
+        );
+        return {
+          success: true,
+          result: mockResponse,
+        };
+      }
+
+      // Configuración de la consulta real con el proveedor seleccionado
       const testData = {
         query:
           "¿Cuáles son los principales objetivos de la taxonomía verde de la UE?",
@@ -101,29 +120,52 @@ export class AiController {
       const prompt =
         "Responde la siguiente pregunta con un breve resumen informativo de 3-5 puntos clave:";
 
-      const result = await this.aiService.processWithAI(testData, prompt, {
-        systemInstruction:
-          "Eres un experto en sostenibilidad y finanzas verdes. Proporciona información precisa y concisa.",
-        temperature: 0.3,
-        maxTokens: 500,
-      });
+      // Usar el proveedor específico si se proporciona, o el predeterminado si no
+      const providerType =
+        provider === "openai" || provider === "deepseek"
+          ? (provider as AiProviderType)
+          : undefined;
 
-      this.logger.log("Respuesta de OpenAI recibida:");
-      this.logger.log(JSON.stringify(result, null, 2));
+      const result = await this.aiService.processWithAI(
+        testData,
+        prompt,
+        {
+          systemInstruction:
+            "Eres un experto en sostenibilidad y finanzas verdes. Proporciona información precisa y concisa.",
+          temperature: 0.3,
+          maxTokens: 500,
+        },
+        providerType
+      );
+
+      this.logger.log(
+        `Respuesta de ${providerType || "IA predeterminada"} recibida.`
+      );
 
       return {
         success: true,
         result,
       };
-      */
     } catch (error: any) {
-      this.logger.error(
-        `Error al probar la conexión con OpenAI: ${error.message}`
-      );
+      this.logger.error(`Error al probar la conexión con IA: ${error.message}`);
       return {
         success: false,
         result: { error: error.message },
       };
     }
+  }
+
+  @Get("providers")
+  @ApiOperation({
+    summary: "Lista los proveedores de IA disponibles",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Lista de proveedores disponibles",
+    type: Object,
+  })
+  getAvailableProviders(): { providers: string[] } {
+    const providers = this.aiService.getAvailableProviders();
+    return { providers };
   }
 }

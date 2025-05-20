@@ -27,7 +27,7 @@
   },
   "packageManager": "yarn@1.22.19",
   "dependencies": {
-    "openai": "^4.100.0",
+    "openai": "^3.3.0",
     "recharts": "^2.15.3"
   }
 }
