@@ -15,11 +15,14 @@ COPY apps/api/package.json ./apps/api/
 # Instalar dependencias
 RUN yarn install --frozen-lockfile
 
-# Instalar argon2 y bcryptjs con las dependencias necesarias 
-RUN yarn workspace @cosmo/api add argon2 bcryptjs dotenv 
+# Instalar dependencias específicas
+RUN yarn workspace @cosmo/api add argon2 bcryptjs dotenv
 
 # Copiar código fuente
 COPY . .
+
+# Reinstalar específicamente openai con la versión correcta
+RUN cd /app/apps/api && npm uninstall openai && npm install openai@3.3.0 --save
 
 # Limpiar directorio de compilación
 RUN rm -rf /app/apps/api/dist

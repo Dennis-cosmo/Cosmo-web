@@ -10,6 +10,7 @@ import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
 import { ExpensesModule } from "./expenses/expenses.module";
 import { ReportsModule } from "./reports/reports.module";
+import { AiModule } from "./ai/ai.module";
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ReportsModule } from "./reports/reports.module";
     UsersModule,
     ExpensesModule,
     ReportsModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [
