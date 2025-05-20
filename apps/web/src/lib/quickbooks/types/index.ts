@@ -46,3 +46,48 @@ export interface QuickBooksSyncPreferences {
   syncFrequency: "daily" | "12hours" | "6hours" | "hourly";
   importPeriod: "1month" | "3months" | "6months" | "1year" | "all";
 }
+
+/**
+ * Configuración guardada con información adicional sobre la sincronización
+ */
+export interface QuickBooksSavedConfig {
+  companyId: string;
+  preferences: QuickBooksSyncPreferences;
+  lastSyncTime: Date | null;
+  nextSyncTime: Date | null;
+  syncStats: {
+    totalItemsSynced: number;
+    lastSyncDuration: number; // en milisegundos
+    itemsByType: Record<string, number>; // ej: { "expenses": 10, "invoices": 5 }
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Calcula la siguiente fecha de sincronización basada en la frecuencia configurada
+ */
+export function calculateNextSyncTime(
+  lastSyncTime: Date,
+  frequency: QuickBooksSyncPreferences["syncFrequency"]
+): Date {
+  const nextSync = new Date(lastSyncTime);
+
+  switch (frequency) {
+    case "hourly":
+      nextSync.setHours(nextSync.getHours() + 1);
+      break;
+    case "6hours":
+      nextSync.setHours(nextSync.getHours() + 6);
+      break;
+    case "12hours":
+      nextSync.setHours(nextSync.getHours() + 12);
+      break;
+    case "daily":
+    default:
+      nextSync.setDate(nextSync.getDate() + 1);
+      break;
+  }
+
+  return nextSync;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
@@ -13,6 +13,8 @@ export default function Header() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const isAuthenticated = status === "authenticated";
+  const [scrolled, setScrolled] = useState(false);
+  const [gradientPosition, setGradientPosition] = useState(0);
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -20,6 +22,31 @@ export default function Header() {
     }
     return pathname.startsWith(path);
   };
+
+  // Actualiza la posición del gradiente periódicamente para crear un efecto de movimiento
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGradientPosition((prev) => (prev + 1) % 100);
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Monitor scroll position for animation
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   // Cerrar el menú del perfil al hacer clic fuera
   const handleClickOutside = (event: MouseEvent) => {
@@ -38,59 +65,105 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="bg-deep-space text-pure-white">
-      <div className="container mx-auto px-4">
+    <header
+      className={`relative bg-gradient-to-r from-cosmo-900 via-cosmo-800 to-cosmo-900 text-pure-white border-b border-eco-green/20 sticky top-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "shadow-lg shadow-eco-green/15 border-eco-green/25 after:opacity-100"
+          : "after:opacity-0"
+      } after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[1px] after:bg-gradient-to-r after:from-transparent after:via-eco-green/40 after:to-transparent after:transition-opacity after:duration-500`}
+    >
+      <div
+        className="absolute inset-0 opacity-50 overflow-hidden"
+        style={{
+          background: `radial-gradient(circle at ${50 + Math.sin(gradientPosition * 0.05) * 30}% ${50 + Math.cos(gradientPosition * 0.05) * 20}%, rgba(87, 217, 163, 0.12) 0%, rgba(54, 179, 126, 0.07) 25%, transparent 50%)`,
+        }}
+      ></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-eco-green/5 to-transparent"></div>
+      <div className="container mx-auto px-4 relative z-10">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <div className="w-10 h-10 rounded-full bg-eco-green flex items-center justify-center mr-2">
-              <span className="font-bold text-pure-white">C</span>
-            </div>
-            <span className="font-bold text-xl">Cosmo</span>
+            <Link href="/" className="flex items-center">
+              <h1 className="text-3xl font-normal tracking-tight text-eco-green drop-shadow-[0_0_15px_rgba(197,255,0,0.5)] transform transition-transform duration-300 hover:scale-110 flex items-center">
+                Cosmo
+              </h1>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-4">
             <Link
               href="/"
-              className={isActive("/") ? "nav-link-active" : "nav-link"}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 
+                relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 
+                after:bg-eco-green after:transform after:scale-x-0 after:origin-left 
+                after:transition-transform after:duration-300 hover:after:scale-x-100
+                hover:bg-eco-green/10 hover:drop-shadow-[0_0_8px_rgba(163,230,53,0.3)] ${
+                  isActive("/")
+                    ? "text-eco-green after:scale-x-100 bg-eco-green/5"
+                    : "text-white/90 hover:text-eco-green"
+                }`}
             >
-              Inicio
+              Home
             </Link>
 
             {isAuthenticated && (
               <>
                 <Link
                   href="/dashboard"
-                  className={
-                    isActive("/dashboard") ? "nav-link-active" : "nav-link"
-                  }
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 
+                    relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 
+                    after:bg-eco-green after:transform after:scale-x-0 after:origin-left 
+                    after:transition-transform after:duration-300 hover:after:scale-x-100
+                    hover:bg-eco-green/10 hover:drop-shadow-[0_0_8px_rgba(163,230,53,0.3)] ${
+                      isActive("/dashboard")
+                        ? "text-eco-green after:scale-x-100 bg-eco-green/5"
+                        : "text-white/90 hover:text-eco-green"
+                    }`}
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/expenses"
-                  className={
-                    isActive("/expenses") ? "nav-link-active" : "nav-link"
-                  }
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 
+                    relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 
+                    after:bg-eco-green after:transform after:scale-x-0 after:origin-left 
+                    after:transition-transform after:duration-300 hover:after:scale-x-100
+                    hover:bg-eco-green/10 hover:drop-shadow-[0_0_8px_rgba(163,230,53,0.3)] ${
+                      isActive("/expenses")
+                        ? "text-eco-green after:scale-x-100 bg-eco-green/5"
+                        : "text-white/90 hover:text-eco-green"
+                    }`}
                 >
-                  Gastos
+                  Expenses
                 </Link>
                 <Link
                   href="/reports"
-                  className={
-                    isActive("/reports") ? "nav-link-active" : "nav-link"
-                  }
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 
+                    relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 
+                    after:bg-eco-green after:transform after:scale-x-0 after:origin-left 
+                    after:transition-transform after:duration-300 hover:after:scale-x-100
+                    hover:bg-eco-green/10 hover:drop-shadow-[0_0_8px_rgba(163,230,53,0.3)] ${
+                      isActive("/reports")
+                        ? "text-eco-green after:scale-x-100 bg-eco-green/5"
+                        : "text-white/90 hover:text-eco-green"
+                    }`}
                 >
-                  Reportes
+                  Reports
                 </Link>
                 <Link
                   href="/integrations"
-                  className={
-                    isActive("/integrations") ? "nav-link-active" : "nav-link"
-                  }
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 
+                    relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 
+                    after:bg-eco-green after:transform after:scale-x-0 after:origin-left 
+                    after:transition-transform after:duration-300 hover:after:scale-x-100
+                    hover:bg-eco-green/10 hover:drop-shadow-[0_0_8px_rgba(163,230,53,0.3)] ${
+                      isActive("/integrations")
+                        ? "text-eco-green after:scale-x-100 bg-eco-green/5"
+                        : "text-white/90 hover:text-eco-green"
+                    }`}
                 >
-                  Integraciones
+                  Integrations
                 </Link>
               </>
             )}
@@ -100,15 +173,18 @@ export default function Header() {
           <div className="hidden md:flex items-center space-x-3">
             {isAuthenticated ? (
               <div className="flex items-center space-x-3">
-                <span className="text-sm">
-                  Hola, {session?.user?.firstName || "Usuario"}
+                <span className="text-sm text-white/90">
+                  Hello, {session?.user?.firstName || "User"}
                 </span>
                 <div className="relative profile-menu-container">
                   <button
                     onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                    className="flex items-center space-x-1 text-pure-white hover:text-lime-accent"
+                    className="flex items-center space-x-1 text-white/90 hover:text-eco-green transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-full bg-grey-stone flex items-center justify-center overflow-hidden">
+                    <div
+                      className="w-8 h-8 rounded-full bg-cosmo-400 flex items-center justify-center overflow-hidden
+                        transform transition-all duration-300 hover:scale-110 hover:bg-eco-green"
+                    >
                       {session?.user?.firstName && (
                         <span className="text-xs font-medium">
                           {session.user.firstName.charAt(0)}
@@ -118,7 +194,7 @@ export default function Header() {
                     </div>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className={`h-4 w-4 transition-transform ${isProfileMenuOpen ? "rotate-180" : ""}`}
+                      className={`h-4 w-4 transition-transform duration-300 ${isProfileMenuOpen ? "rotate-180" : ""}`}
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
@@ -130,32 +206,31 @@ export default function Header() {
                     </svg>
                   </button>
                   {isProfileMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-cosmo-800 rounded-md shadow-lg py-1 z-10">
+                    <div
+                      className="absolute right-0 mt-2 w-48 bg-cosmo-400 rounded-md shadow-lg py-1 z-10 border border-white/10
+                        animate-fadeIn"
+                    >
                       <Link
                         href="/dashboard"
-                        className={`block px-4 py-2 text-sm text-gray-700 dark:text-pure-white hover:bg-gray-100 dark:hover:bg-cosmo-700 ${
-                          isActive("/dashboard")
-                            ? "bg-gray-100 dark:bg-cosmo-700"
-                            : ""
+                        className={`block px-4 py-2 text-sm text-white/90 hover:bg-cosmo-300 transition-all duration-200 hover:pl-6 ${
+                          isActive("/dashboard") ? "bg-cosmo-300" : ""
                         }`}
                       >
-                        Perfil
+                        Profile
                       </Link>
                       <Link
                         href="/settings"
-                        className={`block px-4 py-2 text-sm text-gray-700 dark:text-pure-white hover:bg-gray-100 dark:hover:bg-cosmo-700 ${
-                          isActive("/settings")
-                            ? "bg-gray-100 dark:bg-cosmo-700"
-                            : ""
+                        className={`block px-4 py-2 text-sm text-white/90 hover:bg-cosmo-300 transition-all duration-200 hover:pl-6 ${
+                          isActive("/settings") ? "bg-cosmo-300" : ""
                         }`}
                       >
-                        Configuración
+                        Settings
                       </Link>
                       <button
                         onClick={() => signOut({ callbackUrl: "/" })}
-                        className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-pure-white hover:bg-gray-100 dark:hover:bg-cosmo-700"
+                        className="w-full text-left block px-4 py-2 text-sm text-white/90 hover:bg-cosmo-300 transition-all duration-200 hover:pl-6"
                       >
-                        Cerrar sesión
+                        Logout
                       </button>
                     </div>
                   )}
@@ -165,12 +240,15 @@ export default function Header() {
               <>
                 <Link
                   href="/auth/login"
-                  className="bg-transparent border border-grey-stone hover:border-lime-accent text-pure-white px-4 py-2 rounded-md transition-colors"
+                  className="bg-transparent border border-white/20 hover:border-eco-green text-white/90 px-4 py-2 rounded-md transition-all duration-300 hover:text-eco-green hover:shadow-lg hover:shadow-eco-green/20"
                 >
-                  Iniciar sesión
+                  Login
                 </Link>
-                <Link href="/auth/register" className="btn-primary">
-                  Registro
+                <Link
+                  href="/auth/register"
+                  className="bg-eco-green hover:bg-eco-green text-cosmo-500 px-4 py-2 rounded-md transition-all duration-300 font-medium hover:shadow-lg hover:shadow-eco-green/20 hover:-translate-y-1"
+                >
+                  Register
                 </Link>
               </>
             )}
@@ -180,7 +258,7 @@ export default function Header() {
           <div className="md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-pure-white hover:text-lime-accent"
+              className="text-white/90 hover:text-eco-green transition-colors"
             >
               <svg
                 className="h-6 w-6"
@@ -211,90 +289,90 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-deep-space border-t border-grey-stone/20">
+        <div className="md:hidden bg-cosmo-400 border-t border-white/10 animate-fadeIn">
           <div className="px-2 py-3 space-y-1">
             <Link
               href="/"
-              className={`block px-3 py-2 ${
+              className={`block px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                 isActive("/")
-                  ? "text-lime-accent font-medium"
-                  : "text-pure-white hover:text-lime-accent"
+                  ? "text-eco-green"
+                  : "text-white/90 hover:text-eco-green hover:bg-cosmo-300"
               }`}
             >
-              Inicio
+              Home
             </Link>
 
             {isAuthenticated ? (
               <>
                 <Link
                   href="/dashboard"
-                  className={`block px-3 py-2 ${
+                  className={`block px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                     isActive("/dashboard")
-                      ? "text-lime-accent font-medium"
-                      : "text-pure-white hover:text-lime-accent"
+                      ? "text-eco-green"
+                      : "text-white/90 hover:text-eco-green hover:bg-cosmo-300"
                   }`}
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/expenses"
-                  className={`block px-3 py-2 ${
+                  className={`block px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                     isActive("/expenses")
-                      ? "text-lime-accent font-medium"
-                      : "text-pure-white hover:text-lime-accent"
+                      ? "text-eco-green"
+                      : "text-white/90 hover:text-eco-green hover:bg-cosmo-300"
                   }`}
                 >
-                  Gastos
+                  Expenses
                 </Link>
                 <Link
                   href="/reports"
-                  className={`block px-3 py-2 ${
+                  className={`block px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                     isActive("/reports")
-                      ? "text-lime-accent font-medium"
-                      : "text-pure-white hover:text-lime-accent"
+                      ? "text-eco-green"
+                      : "text-white/90 hover:text-eco-green hover:bg-cosmo-300"
                   }`}
                 >
-                  Reportes
+                  Reports
                 </Link>
                 <Link
                   href="/integrations"
-                  className={`block px-3 py-2 ${
+                  className={`block px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                     isActive("/integrations")
-                      ? "text-lime-accent font-medium"
-                      : "text-pure-white hover:text-lime-accent"
+                      ? "text-eco-green"
+                      : "text-white/90 hover:text-eco-green hover:bg-cosmo-300"
                   }`}
                 >
-                  Integraciones
+                  Integrations
                 </Link>
-                <div className="pt-4 border-t border-grey-stone/20 mt-2">
-                  <div className="block px-3 py-2 text-pure-white">
-                    <span>Hola, {session?.user?.firstName || "Usuario"}</span>
+                <div className="pt-4 border-t border-white/10 mt-2">
+                  <div className="block px-3 py-2 text-white/90">
+                    <span>Hello, {session?.user?.firstName || "User"}</span>
                   </div>
                   <Link
                     href="/dashboard"
-                    className={`block px-3 py-2 ${
+                    className={`block px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                       isActive("/dashboard")
-                        ? "text-lime-accent font-medium"
-                        : "text-pure-white hover:text-lime-accent"
+                        ? "text-eco-green"
+                        : "text-white/90 hover:text-eco-green hover:bg-cosmo-300"
                     }`}
                   >
-                    Perfil
+                    Profile
                   </Link>
                   <Link
                     href="/settings"
-                    className={`block px-3 py-2 ${
+                    className={`block px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                       isActive("/settings")
-                        ? "text-lime-accent font-medium"
-                        : "text-pure-white hover:text-lime-accent"
+                        ? "text-eco-green"
+                        : "text-white/90 hover:text-eco-green hover:bg-cosmo-300"
                     }`}
                   >
-                    Configuración
+                    Settings
                   </Link>
                   <button
                     onClick={() => signOut({ callbackUrl: "/" })}
-                    className="block w-full text-left px-3 py-2 text-pure-white hover:text-lime-accent"
+                    className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white/90 hover:text-eco-green hover:bg-cosmo-300 transition-all duration-200"
                   >
-                    Cerrar sesión
+                    Logout
                   </button>
                 </div>
               </>
@@ -302,15 +380,15 @@ export default function Header() {
               <div className="pt-4 flex flex-col space-y-2">
                 <Link
                   href="/auth/login"
-                  className="bg-transparent border border-grey-stone hover:border-lime-accent text-pure-white px-4 py-2 rounded-md transition-colors w-full text-center"
+                  className="bg-transparent border border-white/20 hover:border-eco-green text-white/90 px-4 py-2 rounded-md transition-all duration-300 hover:text-eco-green w-full text-center"
                 >
-                  Iniciar sesión
+                  Login
                 </Link>
                 <Link
                   href="/auth/register"
-                  className="btn-primary w-full text-center"
+                  className="bg-eco-green hover:bg-eco-green text-cosmo-500 px-4 py-2 rounded-md transition-all duration-300 font-medium w-full text-center"
                 >
-                  Registro
+                  Register
                 </Link>
               </div>
             )}

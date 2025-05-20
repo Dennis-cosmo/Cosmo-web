@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 45, 45, 45; /* Charcoal */
-  --background-rgb: 255, 255, 255; /* Pure White */
+  --foreground-rgb: 45, 45, 45;
+  --background-rgb: 255, 255, 255;
 }
 
 .dark {
-  --foreground-rgb: 255, 255, 255; /* Pure White */
-  --background-rgb: 15, 27, 42; /* Deep Space */
+  --foreground-rgb: 255, 255, 255;
+  --background-rgb: 10, 10, 10;
 }
 
 body {
@@ -19,19 +19,19 @@ body {
 
 @layer base {
   h1 {
-    @apply text-4xl font-bold text-charcoal dark:text-pure-white;
+    @apply text-4xl font-bold text-cosmo-500 dark:text-pure-white;
   }
   h2 {
-    @apply text-3xl font-semibold text-charcoal dark:text-pure-white;
+    @apply text-3xl font-semibold text-cosmo-500 dark:text-pure-white;
   }
   h3 {
-    @apply text-2xl font-semibold text-charcoal dark:text-pure-white;
+    @apply text-2xl font-semibold text-cosmo-500 dark:text-pure-white;
   }
   h4 {
-    @apply text-xl font-semibold text-charcoal dark:text-pure-white;
+    @apply text-xl font-semibold text-cosmo-500 dark:text-pure-white;
   }
   p {
-    @apply text-charcoal dark:text-soft-grey;
+    @apply text-cosmo-500 dark:text-white/90;
   }
   a {
     @apply text-eco-green hover:text-lime-accent transition-colors duration-200;
@@ -41,11 +41,11 @@ body {
 @layer components {
   /* Botones */
   .btn-primary {
-    @apply bg-eco-green hover:bg-lime-accent hover:text-charcoal text-pure-white font-medium py-2 px-4 rounded transition-colors duration-200;
+    @apply bg-eco-green hover:bg-lime-accent text-cosmo-500 font-medium py-2 px-4 rounded transition-colors duration-200;
   }
 
   .btn-secondary {
-    @apply border border-charcoal text-charcoal dark:text-pure-white dark:border-pure-white hover:bg-soft-grey dark:hover:bg-grey-stone/30 font-medium py-2 px-4 rounded transition-colors duration-200;
+    @apply border border-cosmo-500 text-cosmo-500 dark:text-pure-white dark:border-pure-white hover:bg-cosmo-300 dark:hover:bg-cosmo-400/30 font-medium py-2 px-4 rounded transition-colors duration-200;
   }
 
   .btn-outline {
@@ -62,12 +62,12 @@ body {
   }
 
   .container-section {
-    @apply bg-soft-grey dark:bg-cosmo-600 rounded-lg p-8 my-8;
+    @apply bg-cosmo-300 dark:bg-cosmo-500 rounded-lg p-8 my-8;
   }
 
   /* Header y componentes de navegación */
   .header {
-    @apply bg-deep-space text-pure-white p-4 flex justify-between items-center sticky top-0 z-50;
+    @apply bg-cosmo-500 text-pure-white p-4 flex justify-between items-center sticky top-0 z-50;
   }
 
   .nav-link {
@@ -80,16 +80,16 @@ body {
 
   /* Form Elements */
   .input {
-    @apply bg-pure-white dark:bg-cosmo-600 border border-grey-stone rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-eco-green focus:border-transparent transition-all duration-200;
+    @apply bg-pure-white dark:bg-cosmo-400 border border-white/10 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-eco-green focus:border-transparent transition-all duration-200;
   }
 
   .label {
-    @apply block text-charcoal dark:text-soft-grey text-sm font-medium mb-2;
+    @apply block text-cosmo-500 dark:text-white/90 text-sm font-medium mb-2;
   }
 
   /* Badges */
   .badge {
-    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-lime-accent text-charcoal;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-lime-accent text-cosmo-500;
   }
 
   .badge-outline {
@@ -98,22 +98,22 @@ body {
 
   /* Tables */
   .table-container {
-    @apply overflow-x-auto rounded-lg border border-soft-grey dark:border-cosmo-400;
+    @apply overflow-x-auto rounded-lg border border-white/10 dark:border-cosmo-400;
   }
 
   .table {
-    @apply min-w-full divide-y divide-soft-grey dark:divide-cosmo-400;
+    @apply min-w-full divide-y divide-white/10 dark:divide-cosmo-400;
   }
 
   .table-header {
-    @apply bg-soft-grey dark:bg-cosmo-600 text-left text-xs font-medium text-charcoal dark:text-soft-grey uppercase tracking-wider py-3 px-4;
+    @apply bg-cosmo-300 dark:bg-cosmo-500 text-left text-xs font-medium text-cosmo-500 dark:text-white/90 uppercase tracking-wider py-3 px-4;
   }
 
   .table-row {
-    @apply hover:bg-soft-grey/50 dark:hover:bg-cosmo-400/50;
+    @apply hover:bg-cosmo-300/50 dark:hover:bg-cosmo-400/50;
   }
 
   .table-cell {
-    @apply py-3 px-4 whitespace-nowrap text-sm text-charcoal dark:text-soft-grey;
+    @apply py-3 px-4 whitespace-nowrap text-sm text-cosmo-500 dark:text-white/90;
   }
 }
