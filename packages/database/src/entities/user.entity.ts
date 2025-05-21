@@ -24,6 +24,15 @@ export enum SustainabilityLevel {
   LEADER = "leader",
 }
 
+// Interfaz para almacenar información de actividades económicas según la taxonomía de la UE
+export interface EconomicActivity {
+  id: number; // ID de la actividad
+  name: string; // Nombre de la actividad
+  naceCodes?: string[]; // Códigos NACE asociados
+  sectorId: number; // ID del sector al que pertenece
+  sectorName?: string; // Nombre del sector al que pertenece
+}
+
 @Entity("users")
 export class User {
   @PrimaryGeneratedColumn("uuid")
@@ -71,6 +80,16 @@ export class User {
 
   @Column({ nullable: true, type: "varchar" })
   address?: string;
+
+  // Taxonomía de la UE
+  @Column({ nullable: true, type: "simple-array" })
+  euTaxonomySectorIds?: number[];
+
+  @Column({ nullable: true, type: "simple-array" })
+  euTaxonomySectorNames?: string[];
+
+  @Column({ nullable: true, type: "json" })
+  euTaxonomyActivities?: EconomicActivity[];
 
   // Información de sostenibilidad
   @Column({

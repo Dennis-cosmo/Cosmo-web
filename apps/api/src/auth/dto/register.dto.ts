@@ -9,7 +9,12 @@ import {
   IsUrl,
   IsBoolean,
   Matches,
+  IsNumber,
+  IsObject,
+  ValidateNested,
+  ArrayMaxSize,
 } from "class-validator";
+import { Type } from "class-transformer";
 
 // Definimos los niveles de sostenibilidad localmente para evitar problemas de importación
 export enum SustainabilityLevel {
@@ -17,6 +22,28 @@ export enum SustainabilityLevel {
   INTERMEDIATE = "intermediate",
   ADVANCED = "advanced",
   LEADER = "leader",
+}
+
+// DTO para actividades económicas según la taxonomía de la UE
+export class EconomicActivityDto {
+  @IsNumber({}, { message: "El ID de la actividad debe ser un número" })
+  id: number;
+
+  @IsString({
+    message: "El nombre de la actividad debe ser una cadena de texto",
+  })
+  name: string;
+
+  @IsOptional()
+  @IsArray({ message: "Los códigos NACE deben ser un array" })
+  naceCodes?: string[];
+
+  @IsNumber({}, { message: "El ID del sector debe ser un número" })
+  sectorId: number;
+
+  @IsOptional()
+  @IsString({ message: "El nombre del sector debe ser una cadena de texto" })
+  sectorName?: string;
 }
 
 export class RegisterDto {
@@ -72,6 +99,22 @@ export class RegisterDto {
   @IsOptional()
   @IsString({ message: "La dirección debe ser una cadena de texto" })
   address?: string;
+
+  // Taxonomía de la UE
+  @IsOptional()
+  @IsArray({ message: "Los IDs de sectores deben ser un array" })
+  euTaxonomySectorIds?: number[];
+
+  @IsOptional()
+  @IsArray({ message: "Los nombres de sectores deben ser un array" })
+  euTaxonomySectorNames?: string[];
+
+  @IsOptional()
+  @IsArray({ message: "Las actividades económicas deben ser un array" })
+  @ArrayMaxSize(3, { message: "Máximo 3 actividades económicas permitidas" })
+  @ValidateNested({ each: true })
+  @Type(() => EconomicActivityDto)
+  euTaxonomyActivities?: EconomicActivityDto[];
 
   // Información de sostenibilidad
   @IsOptional()

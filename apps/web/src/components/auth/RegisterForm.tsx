@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import Link from "next/link";
+import EUTaxonomySelector from "../ui/EUTaxonomySelector";
+import { TaxonomyActivity } from "../../hooks/useTaxonomy";
 
 // Paso 1: Esquema de validación de la cuenta
 const accountSchema = z
@@ -60,6 +62,22 @@ const companySchema = z.object({
     .or(z.literal("")),
   country: z.string().optional(),
   address: z.string().optional(),
+
+  // Taxonomía EU
+  euTaxonomySectorIds: z.array(z.number()).min(0),
+  euTaxonomySectorNames: z.array(z.string()).min(0),
+  euTaxonomyActivities: z
+    .array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+        sectorId: z.number(),
+        sectorName: z.string().optional(),
+        naceCodes: z.array(z.string()).optional(),
+      })
+    )
+    .max(3, "Solo puedes seleccionar hasta 3 actividades")
+    .optional(),
 });
 
 // Paso 3: Esquema de validación de sostenibilidad
@@ -108,6 +126,22 @@ const registerSchema = z
       .or(z.literal("")),
     country: z.string().optional(),
     address: z.string().optional(),
+
+    // Taxonomía EU
+    euTaxonomySectorIds: z.array(z.number()).min(0),
+    euTaxonomySectorNames: z.array(z.string()).min(0),
+    euTaxonomyActivities: z
+      .array(
+        z.object({
+          id: z.number(),
+          name: z.string(),
+          sectorId: z.number(),
+          sectorName: z.string().optional(),
+          naceCodes: z.array(z.string()).optional(),
+        })
+      )
+      .max(3, "Solo puedes seleccionar hasta 3 actividades")
+      .optional(),
 
     // Campos de sostenibilidad
     sustainabilityLevel: z.string().optional(),
@@ -239,6 +273,11 @@ export default function RegisterForm() {
     country: "",
     address: "",
 
+    // Taxonomía EU
+    euTaxonomySectorIds: [] as number[],
+    euTaxonomySectorNames: [] as string[],
+    euTaxonomyActivities: [] as TaxonomyActivity[],
+
     // Paso 3: Sostenibilidad
     sustainabilityLevel: "",
     sustainabilityGoals: [] as string[],
@@ -309,135 +348,97 @@ export default function RegisterForm() {
     });
   };
 
+  // Manejador para el cambio de sectores de taxonomía
+  const handleSectorsChange = (sectorIds: number[], sectorNames: string[]) => {
+    setFormData({
+      ...formData,
+      euTaxonomySectorIds: sectorIds,
+      euTaxonomySectorNames: sectorNames,
+      // No limpiamos las actividades para permitir seleccionar de distintos sectores
+    });
+  };
+
+  // Manejador para el cambio de actividades de taxonomía
+  const handleActivitiesChange = (activities: TaxonomyActivity[]) => {
+    setFormData({
+      ...formData,
+      euTaxonomyActivities: activities,
+    });
+  };
+
   // Validar los datos según el paso actual
   const validate = (currentStep: number) => {
-    try {
-      let dataToValidate;
+    setErrors({});
+    let isValid = true;
+    let newErrors: Record<string, string> = {};
 
-      switch (currentStep) {
-        case 1:
-          dataToValidate = {
-            email: formData.email,
-            password: formData.password,
-            confirmPassword: formData.confirmPassword,
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            // Incluimos datos falsos para el resto del esquema
-            companyName: "temp",
-            companySize: "temp",
-            industry: "temp",
-            acceptTerms: true,
-            acceptPrivacy: true,
-          };
-          break;
-        case 2:
-          dataToValidate = {
-            // Incluimos datos del paso 1 que ya fueron validados
-            email: formData.email,
-            password: formData.password,
-            confirmPassword: formData.confirmPassword,
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            // Datos del paso actual
-            companyName: formData.companyName,
-            companyLegalName: formData.companyLegalName,
-            taxId: formData.taxId,
-            companySize: formData.companySize,
-            industry: formData.industry,
-            website: formData.website,
-            country: formData.country,
-            address: formData.address,
-            // Incluimos datos falsos para el resto del esquema
-            acceptTerms: true,
-            acceptPrivacy: true,
-          };
-          break;
-        case 3:
-          dataToValidate = {
-            // Incluimos datos previos que ya fueron validados
-            email: formData.email,
-            password: formData.password,
-            confirmPassword: formData.confirmPassword,
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            companyName: formData.companyName,
-            companyLegalName: formData.companyLegalName,
-            taxId: formData.taxId,
-            companySize: formData.companySize,
-            industry: formData.industry,
-            website: formData.website,
-            country: formData.country,
-            address: formData.address,
-            // Datos del paso actual
-            sustainabilityLevel: formData.sustainabilityLevel,
-            sustainabilityGoals: formData.sustainabilityGoals,
-            certifications: formData.certifications,
-            sustainabilityBudgetRange: formData.sustainabilityBudgetRange,
-            sustainabilityNotes: formData.sustainabilityNotes,
-            // Incluimos datos falsos para el resto del esquema
-            acceptTerms: true,
-            acceptPrivacy: true,
-          };
-          break;
-        case 4:
-          // En el último paso validamos el formulario completo
-          dataToValidate = formData;
-          break;
-        default:
-          return false;
+    // Validar según el paso
+    if (currentStep === 1) {
+      try {
+        accountSchema.parse(formData);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          error.errors.forEach((err) => {
+            newErrors[err.path[0]] = err.message;
+          });
+          isValid = false;
+        }
       }
-
-      // Validación parcial según el paso
-      registerSchema.parse(dataToValidate);
-
-      // Si pasó la validación, limpiamos errores
-      setErrors({});
-      return true;
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            // Solo mostramos errores de los campos relevantes para el paso actual
-            if (
-              (step === 1 &&
-                [
-                  "email",
-                  "password",
-                  "confirmPassword",
-                  "firstName",
-                  "lastName",
-                ].includes(String(err.path[0]))) ||
-              (step === 2 &&
-                [
-                  "companyName",
-                  "companyLegalName",
-                  "taxId",
-                  "companySize",
-                  "industry",
-                  "website",
-                  "country",
-                  "address",
-                ].includes(String(err.path[0]))) ||
-              (step === 3 &&
-                [
-                  "sustainabilityLevel",
-                  "sustainabilityGoals",
-                  "certifications",
-                  "sustainabilityBudgetRange",
-                  "sustainabilityNotes",
-                ].includes(String(err.path[0]))) ||
-              (step === 4 &&
-                ["acceptTerms", "acceptPrivacy"].includes(String(err.path[0])))
-            ) {
-              newErrors[err.path[0] as string] = err.message;
+    } else if (currentStep === 2) {
+      try {
+        companySchema.parse(formData);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          error.errors.forEach((err) => {
+            if (typeof err.path[0] === "string") {
+              newErrors[err.path[0]] = err.message;
             }
-          }
-        });
-        setErrors(newErrors);
+          });
+          isValid = false;
+        }
       }
-      return false;
+
+      // Validación personalizada para taxonomía EU
+      if (
+        formData.euTaxonomyActivities.length > 0 &&
+        formData.euTaxonomySectorIds.length === 0
+      ) {
+        newErrors.euTaxonomySectorIds =
+          "Debes seleccionar al menos un sector para añadir actividades";
+        isValid = false;
+      }
+
+      if (formData.euTaxonomyActivities.length > 3) {
+        newErrors.euTaxonomyActivities =
+          "Solo puedes seleccionar hasta 3 actividades";
+        isValid = false;
+      }
+    } else if (currentStep === 3) {
+      try {
+        sustainabilitySchema.parse(formData);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          error.errors.forEach((err) => {
+            newErrors[err.path[0]] = err.message;
+          });
+          isValid = false;
+        }
+      }
+    } else if (currentStep === 4) {
+      try {
+        verificationSchema.parse(formData);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          error.errors.forEach((err) => {
+            newErrors[err.path[0]] = err.message;
+          });
+          isValid = false;
+        }
+      }
     }
+
+    setErrors(newErrors);
+    return isValid;
   };
 
   // Avanzar al siguiente paso
@@ -457,61 +458,65 @@ export default function RegisterForm() {
     e.preventDefault();
     setGeneralError("");
 
-    // Validar el paso actual antes de enviar
-    if (!validate(step)) return;
+    if (!validate(step)) {
+      return;
+    }
 
-    setIsLoading(true);
+    if (step < 4) {
+      handleNext();
+      return;
+    }
 
     try {
+      setIsLoading(true);
+
       // Preparar datos para enviar
-      const dataToSend = {
-        ...formData,
-        // Asegurarnos de que la URL tenga protocolo
-        website: formData.website
-          ? formData.website.match(/^https?:\/\//i)
-            ? formData.website
-            : `https://${formData.website}`
-          : "",
-        sustainabilityGoals:
-          formData.sustainabilityGoals.length > 0
-            ? formData.sustainabilityGoals
-            : undefined,
-        certifications:
-          formData.certifications.length > 0
-            ? formData.certifications
-            : undefined,
+      const dataToSubmit = {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        companyName: formData.companyName,
+        companyLegalName: formData.companyLegalName,
+        taxId: formData.taxId,
+        companySize: formData.companySize,
+        industry: formData.industry,
+        website: formData.website,
+        country: formData.country,
+        address: formData.address,
+        euTaxonomySectorIds: formData.euTaxonomySectorIds,
+        euTaxonomySectorNames: formData.euTaxonomySectorNames,
+        euTaxonomyActivities: formData.euTaxonomyActivities,
+        sustainabilityLevel: formData.sustainabilityLevel,
+        sustainabilityGoals: formData.sustainabilityGoals,
+        certifications: formData.certifications,
+        sustainabilityBudgetRange: formData.sustainabilityBudgetRange,
+        sustainabilityNotes: formData.sustainabilityNotes,
+        acceptTerms: formData.acceptTerms,
       };
 
-      delete dataToSend.confirmPassword;
+      // Enviar datos al servidor
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataToSubmit),
+      });
 
-      // Llamada a la API para registro
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dataToSend),
-        }
-      );
+      const responseData = await response.json();
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Error al registrar usuario");
-      }
-
-      // Redirigir a página de éxito
-      router.push("/auth/register-success");
-    } catch (error) {
-      if (error instanceof Error) {
-        setGeneralError(error.message);
-      } else {
-        setGeneralError(
-          "Ha ocurrido un error. Por favor, inténtalo de nuevo más tarde."
+        throw new Error(
+          responseData.message || "Ha ocurrido un error en el registro"
         );
       }
-      console.error("Error de registro:", error);
+
+      // Redireccionar a la página de éxito
+      router.push("/auth/register-success");
+    } catch (error: any) {
+      console.error("Error en registro:", error);
+      setGeneralError(error.message || "Error en el registro");
     } finally {
       setIsLoading(false);
     }
@@ -536,129 +541,128 @@ export default function RegisterForm() {
   // Paso 1: Información de la cuenta
   const renderAccountStep = () => {
     return (
-      <>
-        <h3 className="text-xl font-semibold mb-4">Información de la cuenta</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="firstName" className="label">
-              Nombre
-            </label>
-            <input
-              id="firstName"
-              name="firstName"
-              type="text"
-              autoComplete="given-name"
-              required
-              className={`input w-full ${errors.firstName ? "border-red-500" : ""}`}
-              value={formData.firstName}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
-            {errors.firstName && (
-              <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor="lastName" className="label">
-              Apellido
-            </label>
-            <input
-              id="lastName"
-              name="lastName"
-              type="text"
-              autoComplete="family-name"
-              required
-              className={`input w-full ${errors.lastName ? "border-red-500" : ""}`}
-              value={formData.lastName}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
-            {errors.lastName && (
-              <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <label htmlFor="email" className="label">
-            Email corporativo
+      <div>
+        <div className="mb-4">
+          <label
+            htmlFor="email"
+            className="block mb-2 text-sm font-medium text-gray-700"
+          >
+            Email
           </label>
           <input
+            type="email"
             id="email"
             name="email"
-            type="email"
-            autoComplete="email"
-            required
-            className={`input w-full ${errors.email ? "border-red-500" : ""}`}
             value={formData.email}
             onChange={handleChange}
-            disabled={isLoading}
+            className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
+            placeholder="tu@email.com"
           />
           {errors.email && (
-            <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
           )}
         </div>
 
-        <div className="mt-4">
-          <label htmlFor="password" className="label">
+        <div className="mb-4">
+          <label
+            htmlFor="password"
+            className="block mb-2 text-sm font-medium text-gray-700"
+          >
             Contraseña
           </label>
           <input
+            type="password"
             id="password"
             name="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            className={`input w-full ${errors.password ? "border-red-500" : ""}`}
             value={formData.password}
             onChange={handleChange}
-            disabled={isLoading}
+            className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
           />
           {errors.password && (
-            <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
           )}
-          <p className="text-xs text-grey-stone mt-1">
-            La contraseña debe tener al menos 8 caracteres
-          </p>
         </div>
 
-        <div className="mt-4">
-          <label htmlFor="confirmPassword" className="label">
-            Confirmar Contraseña
+        <div className="mb-4">
+          <label
+            htmlFor="confirmPassword"
+            className="block mb-2 text-sm font-medium text-gray-700"
+          >
+            Confirmar contraseña
           </label>
           <input
+            type="password"
             id="confirmPassword"
             name="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            required
-            className={`input w-full ${errors.confirmPassword ? "border-red-500" : ""}`}
             value={formData.confirmPassword}
             onChange={handleChange}
-            disabled={isLoading}
+            className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
           />
           {errors.confirmPassword && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="mt-1 text-sm text-red-600">
               {errors.confirmPassword}
             </p>
           )}
         </div>
-      </>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="mb-4">
+            <label
+              htmlFor="firstName"
+              className="block mb-2 text-sm font-medium text-gray-700"
+            >
+              Nombre
+            </label>
+            <input
+              type="text"
+              id="firstName"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
+            />
+            {errors.firstName && (
+              <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+            )}
+          </div>
+
+          <div className="mb-4">
+            <label
+              htmlFor="lastName"
+              className="block mb-2 text-sm font-medium text-gray-700"
+            >
+              Apellido
+            </label>
+            <input
+              type="text"
+              id="lastName"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
+            />
+            {errors.lastName && (
+              <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+            )}
+          </div>
+        </div>
+      </div>
     );
   };
 
   // Paso 2: Información de la empresa
   const renderCompanyStep = () => {
     return (
-      <>
-        <h3 className="text-xl font-semibold mb-4">
+      <div>
+        <h3 className="text-xl font-semibold mb-4 text-gray-800">
           Información de la empresa
         </h3>
 
         <div className="mt-4">
-          <label htmlFor="companyName" className="label">
+          <label
+            htmlFor="companyName"
+            className="block mb-2 text-sm font-medium text-gray-700"
+          >
             Nombre comercial de la empresa*
           </label>
           <input
@@ -666,64 +670,73 @@ export default function RegisterForm() {
             name="companyName"
             type="text"
             required
-            className={`input w-full ${errors.companyName ? "border-red-500" : ""}`}
+            className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
             value={formData.companyName}
             onChange={handleChange}
             disabled={isLoading}
           />
           {errors.companyName && (
-            <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.companyName}</p>
           )}
         </div>
 
         <div className="mt-4">
-          <label htmlFor="companyLegalName" className="label">
+          <label
+            htmlFor="companyLegalName"
+            className="block mb-2 text-sm font-medium text-gray-700"
+          >
             Razón social (opcional)
           </label>
           <input
             id="companyLegalName"
             name="companyLegalName"
             type="text"
-            className={`input w-full ${errors.companyLegalName ? "border-red-500" : ""}`}
+            className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
             value={formData.companyLegalName}
             onChange={handleChange}
             disabled={isLoading}
           />
           {errors.companyLegalName && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="mt-1 text-sm text-red-600">
               {errors.companyLegalName}
             </p>
           )}
         </div>
 
         <div className="mt-4">
-          <label htmlFor="taxId" className="label">
+          <label
+            htmlFor="taxId"
+            className="block mb-2 text-sm font-medium text-gray-700"
+          >
             Identificación fiscal (CIF/NIF) (opcional)
           </label>
           <input
             id="taxId"
             name="taxId"
             type="text"
-            className={`input w-full ${errors.taxId ? "border-red-500" : ""}`}
+            className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
             value={formData.taxId}
             onChange={handleChange}
             disabled={isLoading}
           />
           {errors.taxId && (
-            <p className="text-red-500 text-sm mt-1">{errors.taxId}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.taxId}</p>
           )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div>
-            <label htmlFor="companySize" className="label">
+            <label
+              htmlFor="companySize"
+              className="block mb-2 text-sm font-medium text-gray-700"
+            >
               Tamaño de la empresa*
             </label>
             <select
               id="companySize"
               name="companySize"
               required
-              className={`input w-full ${errors.companySize ? "border-red-500" : ""}`}
+              className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
               value={formData.companySize}
               onChange={handleChange}
               disabled={isLoading}
@@ -735,19 +748,22 @@ export default function RegisterForm() {
               ))}
             </select>
             {errors.companySize && (
-              <p className="text-red-500 text-sm mt-1">{errors.companySize}</p>
+              <p className="mt-1 text-sm text-red-600">{errors.companySize}</p>
             )}
           </div>
 
           <div>
-            <label htmlFor="industry" className="label">
+            <label
+              htmlFor="industry"
+              className="block mb-2 text-sm font-medium text-gray-700"
+            >
               Sector/Industria*
             </label>
             <select
               id="industry"
               name="industry"
               required
-              className={`input w-full ${errors.industry ? "border-red-500" : ""}`}
+              className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
               value={formData.industry}
               onChange={handleChange}
               disabled={isLoading}
@@ -759,13 +775,16 @@ export default function RegisterForm() {
               ))}
             </select>
             {errors.industry && (
-              <p className="text-red-500 text-sm mt-1">{errors.industry}</p>
+              <p className="mt-1 text-sm text-red-600">{errors.industry}</p>
             )}
           </div>
         </div>
 
         <div className="mt-4">
-          <label htmlFor="website" className="label">
+          <label
+            htmlFor="website"
+            className="block mb-2 text-sm font-medium text-gray-700"
+          >
             Sitio web (opcional)
           </label>
           <input
@@ -773,57 +792,112 @@ export default function RegisterForm() {
             name="website"
             type="text"
             placeholder="www.ejemplo.com o https://ejemplo.com"
-            className={`input w-full ${errors.website ? "border-red-500" : ""}`}
+            className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
             value={formData.website}
             onChange={handleChange}
             disabled={isLoading}
           />
           {errors.website && (
-            <p className="text-red-500 text-sm mt-1">{errors.website}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.website}</p>
           )}
-          <p className="text-xs text-grey-stone mt-1">
+          <p className="text-xs mt-1 text-gray-600">
             Puedes introducir la URL con o sin https://
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div>
-            <label htmlFor="country" className="label">
+            <label
+              htmlFor="country"
+              className="block mb-2 text-sm font-medium text-gray-700"
+            >
               País (opcional)
             </label>
             <input
               id="country"
               name="country"
               type="text"
-              className={`input w-full ${errors.country ? "border-red-500" : ""}`}
+              className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
               value={formData.country}
               onChange={handleChange}
               disabled={isLoading}
             />
             {errors.country && (
-              <p className="text-red-500 text-sm mt-1">{errors.country}</p>
+              <p className="mt-1 text-sm text-red-600">{errors.country}</p>
             )}
           </div>
 
           <div>
-            <label htmlFor="address" className="label">
+            <label
+              htmlFor="address"
+              className="block mb-2 text-sm font-medium text-gray-700"
+            >
               Dirección (opcional)
             </label>
             <input
               id="address"
               name="address"
               type="text"
-              className={`input w-full ${errors.address ? "border-red-500" : ""}`}
+              className="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-eco-green text-gray-900"
               value={formData.address}
               onChange={handleChange}
               disabled={isLoading}
             />
             {errors.address && (
-              <p className="text-red-500 text-sm mt-1">{errors.address}</p>
+              <p className="mt-1 text-sm text-red-600">{errors.address}</p>
             )}
           </div>
         </div>
-      </>
+
+        <div className="mt-6 bg-blue-50 rounded-lg border border-blue-100 overflow-hidden">
+          <div className="p-3 sm:p-4 md:p-5 bg-blue-100/70">
+            <h4 className="text-base sm:text-lg font-medium text-blue-800">
+              Taxonomía de Finanzas Sostenibles UE
+            </h4>
+            <p className="text-xs sm:text-sm text-blue-700 mt-1">
+              La Taxonomía UE es un sistema de clasificación que establece qué
+              actividades económicas se consideran ambientalmente sostenibles.
+              Esta información nos ayuda a analizar tus gastos en el contexto de
+              cumplimiento con la taxonomía.
+            </p>
+          </div>
+
+          <div className="p-3 sm:p-4 md:p-5">
+            <EUTaxonomySelector
+              selectedSectorIds={formData.euTaxonomySectorIds}
+              selectedActivities={formData.euTaxonomyActivities}
+              onSectorsChange={handleSectorsChange}
+              onActivitiesChange={handleActivitiesChange}
+              disabled={isLoading}
+            />
+
+            <div className="mt-3 text-xs">
+              <a
+                href="https://ec.europa.eu/sustainable-finance-taxonomy/wizard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center"
+              >
+                <span>Más información sobre la Taxonomía UE</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3 w-3 ml-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -1019,6 +1093,38 @@ export default function RegisterForm() {
                   ?.label || formData.industry}
               </span>
             </div>
+
+            {/* Mostrar sectores de taxonomía si están seleccionados */}
+            {formData.euTaxonomySectorNames.length > 0 && (
+              <div className="flex items-start">
+                <span className="font-medium w-1/3">Sectores EU:</span>
+                <span className="text-grey-stone">
+                  {formData.euTaxonomySectorNames.join(", ")}
+                </span>
+              </div>
+            )}
+
+            {/* Mostrar actividades económicas si están seleccionadas */}
+            {formData.euTaxonomyActivities.length > 0 && (
+              <div className="flex items-start">
+                <span className="font-medium w-1/3">Actividades:</span>
+                <div className="text-grey-stone flex-1">
+                  <ul className="list-disc pl-5 space-y-1">
+                    {formData.euTaxonomyActivities.map((activity) => (
+                      <li key={activity.id}>
+                        {activity.name}
+                        {activity.naceCodes &&
+                          activity.naceCodes.length > 0 && (
+                            <span className="text-xs text-gray-500 block">
+                              NACE: {activity.naceCodes.join(", ")}
+                            </span>
+                          )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

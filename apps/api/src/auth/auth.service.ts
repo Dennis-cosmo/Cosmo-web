@@ -16,31 +16,31 @@ import * as crypto from "crypto";
 // import * as argon2 from "argon2";
 import * as bcryptjs from "bcryptjs";
 import { ConfigService } from "@nestjs/config";
+import { createHash } from "crypto";
 
 // Definir tipo para los datos extendidos
 type ExtendedUser = any;
 
 // Valor fijo para identificar hash-sha256 legacy
-const SHA256_PREFIX = "sha256:";
+const SHA256_PREFIX = "sha256$";
 // Prefijo para identificar hashes bcrypt
-const BCRYPT_PREFIX = "bcrypt:";
+const BCRYPT_PREFIX = "$2b$";
 
 // Funciones de hash temporales para retrocompatibilidad
 function hashPasswordSha256(password: string): string {
-  return (
-    SHA256_PREFIX + crypto.createHash("sha256").update(password).digest("hex")
-  );
+  const hash = createHash("sha256").update(password).digest("hex");
+  return `${SHA256_PREFIX}${hash}`;
 }
 
 function comparePasswordSha256(
   password: string,
   hashedPassword: string
 ): boolean {
-  if (!hashedPassword.startsWith(SHA256_PREFIX)) {
+  if (!hashedPassword || !hashedPassword.startsWith(SHA256_PREFIX)) {
     return false;
   }
   const actualHash = hashedPassword.substring(SHA256_PREFIX.length);
-  const hashed = crypto.createHash("sha256").update(password).digest("hex");
+  const hashed = createHash("sha256").update(password).digest("hex");
   return hashed === actualHash;
 }
 
@@ -105,9 +105,15 @@ export class AuthService {
           await this.updatePasswordHash(user.id, password);
           this.logger.log(`Hash actualizado a bcrypt para usuario ${user.id}`);
         }
-      } else if (hashedPassword.startsWith("$2")) {
-        // Formato bcrypt estándar (sin prefijo)
-        this.logger.log(`Comprobando con formato bcrypt estándar`);
+      } else if (
+        hashedPassword.startsWith("$2a$") ||
+        hashedPassword.startsWith("$2b$") ||
+        hashedPassword.startsWith("$2y$")
+      ) {
+        // Formato bcrypt estándar con cualquier prefijo válido
+        this.logger.log(
+          `Comprobando con formato bcrypt estándar (prefijo: ${hashedPassword.substring(0, 4)})`
+        );
         try {
           isPasswordValid = await bcryptjs.compare(password, hashedPassword);
           this.logger.log(
@@ -166,8 +172,7 @@ export class AuthService {
 
         // Si bcrypt falla, intentar con SHA-256
         if (!isPasswordValid) {
-          const simpleSha256 = crypto
-            .createHash("sha256")
+          const simpleSha256 = createHash("sha256")
             .update(password)
             .digest("hex");
           isPasswordValid = hashedPassword === simpleSha256;
@@ -287,11 +292,6 @@ export class AuthService {
       try {
         const salt = await bcryptjs.genSalt(12);
         passwordHash = await bcryptjs.hash(registerDto.password, salt);
-
-        // Asegurarse que no tenga prefijo
-        if (passwordHash.startsWith(BCRYPT_PREFIX)) {
-          passwordHash = passwordHash.substring(BCRYPT_PREFIX.length);
-        }
       } catch (error) {
         this.logger.error(
           `Error al hashear contraseña: ${error instanceof Error ? error.message : String(error)}`
@@ -350,6 +350,51 @@ export class AuthService {
         if (registerDto.address)
           userWithAllFields.address = registerDto.address;
 
+        // Campos de la taxonomía EU
+        if (Array.isArray(registerDto.euTaxonomySectorIds)) {
+          userWithAllFields.euTaxonomySectorIds =
+            registerDto.euTaxonomySectorIds;
+        }
+
+        if (Array.isArray(registerDto.euTaxonomySectorNames)) {
+          userWithAllFields.euTaxonomySectorNames =
+            registerDto.euTaxonomySectorNames;
+        }
+
+        if (
+          Array.isArray(registerDto.euTaxonomyActivities) &&
+          registerDto.euTaxonomyActivities.length > 0
+        ) {
+          // Asegurarse de no exceder el límite de 3 actividades
+          const limitedActivities = registerDto.euTaxonomyActivities.slice(
+            0,
+            3
+          );
+
+          // Asegurarnos de que cada actividad tiene la información completa (incluyendo naceCodes)
+          const processedActivities = limitedActivities.map((activity) => ({
+            id: activity.id,
+            name: activity.name,
+            sectorId: activity.sectorId,
+            sectorName:
+              activity.sectorName ||
+              registerDto.euTaxonomySectorNames?.find(
+                (name, index) =>
+                  registerDto.euTaxonomySectorIds?.[index] === activity.sectorId
+              ) ||
+              "",
+            naceCodes: Array.isArray(activity.naceCodes)
+              ? activity.naceCodes
+              : [],
+          }));
+
+          userWithAllFields.euTaxonomyActivities = processedActivities;
+
+          this.logger.debug(
+            `Guardando ${processedActivities.length} actividades económicas para el usuario ${registerDto.email}`
+          );
+        }
+
         // Campos de sostenibilidad
         if (registerDto.sustainabilityLevel) {
           userWithAllFields.sustainabilityLevel =
@@ -372,6 +417,12 @@ export class AuthService {
 
         // Guardar usuario
         const savedUser = await this.usersRepository.save(userWithAllFields);
+
+        // Loguear el hash guardado para depuración
+        this.logger.log(
+          `Usuario registrado con éxito. Email: ${savedUser.email}, ID: ${savedUser.id}`
+        );
+        this.logger.log(`Hash de contraseña guardado: ${passwordHash}`);
 
         // Enviar email de verificación
         this.sendVerificationEmail(savedUser.email, verificationToken);

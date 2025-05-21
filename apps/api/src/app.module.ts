@@ -11,6 +11,7 @@ import { UsersModule } from "./users/users.module";
 import { ExpensesModule } from "./expenses/expenses.module";
 import { ReportsModule } from "./reports/reports.module";
 import { AiModule } from "./ai/ai.module";
+import { TaxonomyModule } from "./taxonomy/taxonomy.module";
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { AiModule } from "./ai/ai.module";
     ExpensesModule,
     ReportsModule,
     AiModule,
+    TaxonomyModule,
   ],
   controllers: [AppController],
   providers: [
