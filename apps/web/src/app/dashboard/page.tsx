@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -12,112 +12,117 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { useUserProfile } from "../../hooks/useUserProfile";
+import { useSession } from "next-auth/react";
 
-const companyName = "ACME GmbH";
-const period = "Q1 2025";
-const sustainabilityScore = "RATIO: 2:4";
+// Datos estáticos para los gráficos (mantener como respaldo)
+const staticData = {
+  companyName: "ACME GmbH",
+  period: "Q1 2025",
+  sustainabilityScore: "RATIO: 2:4",
 
-// Taxonomy Eligible Activities
-const taxonomyEligibleActivities = [
-  {
-    name: "Manufacture of electrical and electronic equipment: C26",
-    opEx: "$12,000",
-    capEx: "$8,000",
-    turnover: "$30,000",
-    criteria: [
-      {
-        label: "Substantial contribution criteria",
-        color: "bg-eco-green/20 border-eco-green text-eco-green",
-      },
-      {
-        label: "Climate Change Mitigation",
-        color: "bg-lime-accent/20 border-lime-accent text-lime-accent",
-      },
-      {
-        label: "Climate Change Adaptation",
-        color: "bg-eco-green/20 border-eco-green text-eco-green",
-      },
-      {
-        label: "Water",
-        color: "bg-lime-accent/20 border-lime-accent text-lime-accent",
-      },
-      {
-        label: "Pollution",
-        color: "bg-cosmo-500/20 border-cosmo-500 text-cosmo-500",
-      },
-      {
-        label: "Biodiversity",
-        color: "bg-eco-green/20 border-eco-green text-eco-green",
-      },
-    ],
-    minimumSafeguards: ["OECD", "UN Guiding Principles"],
-    article: "SFDR: Article 8",
-  },
-  {
-    name: "Electricity generation from bioenergy D35.11",
-    opEx: "$10,000",
-    capEx: "$6,000",
-    turnover: "$25,000",
-    criteria: [
-      {
-        label: "Substantial contribution criteria",
-        color: "bg-eco-green/20 border-eco-green text-eco-green",
-      },
-      {
-        label: "Climate Change Mitigation",
-        color: "bg-lime-accent/20 border-lime-accent text-lime-accent",
-      },
-      {
-        label: "Climate Change Adaptation",
-        color: "bg-eco-green/20 border-eco-green text-eco-green",
-      },
-      {
-        label: "Water",
-        color: "bg-lime-accent/20 border-lime-accent text-lime-accent",
-      },
-      {
-        label: "Pollution",
-        color: "bg-cosmo-500/20 border-cosmo-500 text-cosmo-500",
-      },
-    ],
-    minimumSafeguards: ["OECD", "UN Guiding Principles"],
-    article: "SFDR: Article 9",
-  },
-];
+  // Taxonomy Eligible Activities (respaldo)
+  taxonomyEligibleActivities: [
+    {
+      name: "Manufacture of electrical and electronic equipment: C26",
+      opEx: "$12,000",
+      capEx: "$8,000",
+      turnover: "$30,000",
+      criteria: [
+        {
+          label: "Substantial contribution criteria",
+          color: "bg-eco-green/20 border-eco-green text-eco-green",
+        },
+        {
+          label: "Climate Change Mitigation",
+          color: "bg-lime-accent/20 border-lime-accent text-lime-accent",
+        },
+        {
+          label: "Climate Change Adaptation",
+          color: "bg-eco-green/20 border-eco-green text-eco-green",
+        },
+        {
+          label: "Water",
+          color: "bg-lime-accent/20 border-lime-accent text-lime-accent",
+        },
+        {
+          label: "Pollution",
+          color: "bg-cosmo-500/20 border-cosmo-500 text-cosmo-500",
+        },
+        {
+          label: "Biodiversity",
+          color: "bg-eco-green/20 border-eco-green text-eco-green",
+        },
+      ],
+      minimumSafeguards: ["OECD", "UN Guiding Principles"],
+      article: "SFDR: Article 8",
+    },
+    {
+      name: "Electricity generation from bioenergy D35.11",
+      opEx: "$10,000",
+      capEx: "$6,000",
+      turnover: "$25,000",
+      criteria: [
+        {
+          label: "Substantial contribution criteria",
+          color: "bg-eco-green/20 border-eco-green text-eco-green",
+        },
+        {
+          label: "Climate Change Mitigation",
+          color: "bg-lime-accent/20 border-lime-accent text-lime-accent",
+        },
+        {
+          label: "Climate Change Adaptation",
+          color: "bg-eco-green/20 border-eco-green text-eco-green",
+        },
+        {
+          label: "Water",
+          color: "bg-lime-accent/20 border-lime-accent text-lime-accent",
+        },
+        {
+          label: "Pollution",
+          color: "bg-cosmo-500/20 border-cosmo-500 text-cosmo-500",
+        },
+      ],
+      minimumSafeguards: ["OECD", "UN Guiding Principles"],
+      article: "SFDR: Article 9",
+    },
+  ],
 
-// Non-green Activities
-const nonGreenActivities = [
-  {
-    name: "Fossil fuel extraction and processing: B06",
-    opEx: "$18,000",
-    capEx: "$15,000",
-    turnover: "$45,000",
-    criteria: [
-      {
-        label: "Does Not Meet Criteria",
-        color: "bg-red-500/20 border-red-500 text-red-400",
-      },
-    ],
-    minimumSafeguards: ["DNSH Not Met"],
-    article: "SFDR: Article 6",
-  },
-  {
-    name: "Coal mining and related activities: B05",
-    opEx: "$9,000",
-    capEx: "$7,000",
-    turnover: "$22,000",
-    criteria: [
-      {
-        label: "Does Not Meet Criteria",
-        color: "bg-red-500/20 border-red-500 text-red-400",
-      },
-    ],
-    minimumSafeguards: ["DNSH Not Met"],
-    article: "SFDR: Article 6",
-  },
-];
+  // Non-green Activities (datos estáticos)
+  nonGreenActivities: [
+    {
+      name: "Fossil fuel extraction and processing: B06",
+      opEx: "$18,000",
+      capEx: "$15,000",
+      turnover: "$45,000",
+      criteria: [
+        {
+          label: "Does Not Meet Criteria",
+          color: "bg-red-500/20 border-red-500 text-red-400",
+        },
+      ],
+      minimumSafeguards: ["DNSH Not Met"],
+      article: "SFDR: Article 6",
+    },
+    {
+      name: "Coal mining and related activities: B05",
+      opEx: "$9,000",
+      capEx: "$7,000",
+      turnover: "$22,000",
+      criteria: [
+        {
+          label: "Does Not Meet Criteria",
+          color: "bg-red-500/20 border-red-500 text-red-400",
+        },
+      ],
+      minimumSafeguards: ["DNSH Not Met"],
+      article: "SFDR: Article 6",
+    },
+  ],
+};
 
-// Datos estáticos para los gráficos
+// Datos estáticos para los gráficos (mantener)
 const pieData = [
   { name: "Scope 1", value: 30 },
   { name: "Scope 2", value: 20 },
@@ -134,6 +139,34 @@ const barData = [
 const totalPie = pieData.reduce((acc, curr) => acc + curr.value, 0);
 
 export default function Dashboard() {
+  const { data: session } = useSession();
+  const { profile, loading, error } = useUserProfile();
+  const [companyInfo, setCompanyInfo] = useState({
+    companyName: "Cargando...",
+    period: "Q1 2025",
+    sustainabilityScore: "RATIO: 2:4",
+  });
+  const [taxonomyActivities, setTaxonomyActivities] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (profile) {
+      // Actualizar información de la empresa
+      setCompanyInfo({
+        companyName: profile.companyName || "Tu Empresa",
+        period: "Q1 2025", // Esto podría venir del backend en el futuro
+        sustainabilityScore: "RATIO: 2:4", // Esto podría calcularse en el backend
+      });
+
+      // Actualizar actividades de taxonomía si existen
+      if (profile.taxonomyActivities && profile.taxonomyActivities.length > 0) {
+        setTaxonomyActivities(profile.taxonomyActivities);
+      } else {
+        // Usar datos de respaldo si no hay datos reales
+        setTaxonomyActivities(staticData.taxonomyEligibleActivities);
+      }
+    }
+  }, [profile]);
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
@@ -185,7 +218,7 @@ export default function Dashboard() {
               </svg>
             </h1>
             <span className="text-2xl font-semibold tracking-tight">
-              {companyName}
+              {companyInfo.companyName}
             </span>
           </div>
           <div className="flex gap-3 mt-4 md:mt-0">
@@ -214,7 +247,7 @@ export default function Dashboard() {
               Sustainability Score
             </span>
             <span className="text-2xl font-bold text-lime-accent animate-fadeIn">
-              {sustainabilityScore}
+              {companyInfo.sustainabilityScore}
             </span>
           </div>
           <div className="flex flex-col gap-2">
@@ -222,7 +255,7 @@ export default function Dashboard() {
               Period
             </span>
             <span className="text-lg font-semibold text-white animate-fadeIn delay-200">
-              {period}
+              {companyInfo.period}
             </span>
           </div>
         </div>
@@ -234,80 +267,123 @@ export default function Dashboard() {
             <div className="bg-gradient-to-r from-eco-green to-lime-accent text-cosmo-500 text-center py-3.5 rounded-md mb-10 font-semibold text-lg border border-eco-green/20 transition-all duration-300 hover:shadow-md hover:scale-[1.01] cursor-pointer">
               Taxonomy Eligible
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {taxonomyEligibleActivities.map((activity, idx) => (
-                <div
-                  key={activity.name}
-                  className="group bg-cosmo-800/70 border border-white/10 rounded-2xl p-8 shadow-xl backdrop-blur-md transition-all duration-500 hover:scale-[1.03] hover:bg-cosmo-800/90 hover:border-eco-green/30 animate-fadeIn relative overflow-hidden"
-                  style={{ animationDelay: `${0.2 + idx * 0.1}s` }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-eco-green/5 to-lime-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-eco-green/10 rounded-full blur-2xl transform -translate-x-1/2 -translate-y-1/2 group-hover:bg-eco-green/20 transition-all duration-500"></div>
 
-                  <h2 className="text-2xl font-bold mb-2 text-white/90 tracking-tight group-hover:text-eco-green transition-colors duration-300">
-                    {activity.name}
-                  </h2>
-                  <div className="flex flex-col sm:flex-row gap-4 mb-6 mt-4">
-                    <div className="flex-1 bg-cosmo-700/60 rounded-lg p-4 flex flex-col items-center border border-cosmo-500/30 backdrop-blur-sm hover:border-eco-green/30 hover:bg-cosmo-700/80 transition-all duration-300 transform hover:-translate-y-1">
-                      <span className="text-xs text-white/60 mb-1">OpEx</span>
-                      <span className="text-lg font-semibold">
-                        {activity.opEx}
+            {loading ? (
+              <div className="flex justify-center items-center h-40">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-eco-green"></div>
+              </div>
+            ) : error ? (
+              <div className="bg-red-500/20 p-4 rounded-lg text-center">
+                Error al cargar las actividades económicas
+              </div>
+            ) : taxonomyActivities.length === 0 ? (
+              <div className="bg-cosmo-800/70 border border-white/10 rounded-2xl p-8 text-center">
+                <p className="text-white/70">
+                  No se han registrado actividades económicas según la Taxonomía
+                  EU
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                {taxonomyActivities.map((activity, idx) => (
+                  <div
+                    key={activity.id || idx}
+                    className="group bg-cosmo-800/70 border border-white/10 rounded-2xl p-8 shadow-xl backdrop-blur-md transition-all duration-500 hover:scale-[1.03] hover:bg-cosmo-800/90 hover:border-eco-green/30 animate-fadeIn relative overflow-hidden"
+                    style={{ animationDelay: `${0.2 + idx * 0.1}s` }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-eco-green/5 to-lime-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-eco-green/10 rounded-full blur-2xl transform -translate-x-1/2 -translate-y-1/2 group-hover:bg-eco-green/20 transition-all duration-500"></div>
+
+                    <h2 className="text-2xl font-bold mb-2 text-white/90 tracking-tight group-hover:text-eco-green transition-colors duration-300">
+                      {activity.name}
+                    </h2>
+
+                    {activity.sectorName && (
+                      <div className="mb-4 text-sm text-white/60">
+                        Sector: {activity.sectorName}
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row gap-4 mb-6 mt-4">
+                      <div className="flex-1 bg-cosmo-700/60 rounded-lg p-4 flex flex-col items-center border border-cosmo-500/30 backdrop-blur-sm hover:border-eco-green/30 hover:bg-cosmo-700/80 transition-all duration-300 transform hover:-translate-y-1">
+                        <span className="text-xs text-white/60 mb-1">OpEx</span>
+                        <span className="text-lg font-semibold">
+                          {activity.opEx}
+                        </span>
+                      </div>
+                      <div className="flex-1 bg-cosmo-700/60 rounded-lg p-4 flex flex-col items-center border border-cosmo-500/30 backdrop-blur-sm hover:border-eco-green/30 hover:bg-cosmo-700/80 transition-all duration-300 transform hover:-translate-y-1">
+                        <span className="text-xs text-white/60 mb-1">
+                          CapEx
+                        </span>
+                        <span className="text-lg font-semibold">
+                          {activity.capEx}
+                        </span>
+                      </div>
+                      <div className="flex-1 bg-cosmo-700/60 rounded-lg p-4 flex flex-col items-center border border-cosmo-500/30 backdrop-blur-sm hover:border-eco-green/30 hover:bg-cosmo-700/80 transition-all duration-300 transform hover:-translate-y-1">
+                        <span className="text-xs text-white/60 mb-1">
+                          Turnover
+                        </span>
+                        <span className="text-lg font-semibold">
+                          {activity.turnover}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      {activity.criteria?.map((c, i) => (
+                        <span
+                          key={c.label + i}
+                          className={`px-3 py-1 rounded-full border text-xs font-medium ${c.color} flex items-center gap-1 animate-fadeIn transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-eco-green/10`}
+                          style={{ animationDelay: `${0.3 + i * 0.05}s` }}
+                        >
+                          {c.label}
+                        </span>
+                      ))}
+                    </div>
+
+                    {activity.naceCodes && activity.naceCodes.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {activity.naceCodes.map((code, i) => (
+                          <span
+                            key={`nace-${code}-${i}`}
+                            className="bg-lime-accent/10 text-lime-accent px-2 py-1 rounded text-xs font-medium"
+                          >
+                            NACE: {code}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-2 mb-2 mt-2">
+                      {activity.minimumSafeguards?.map((ms, i) => (
+                        <span
+                          key={ms + i}
+                          className="px-2 py-1 rounded bg-cosmo-700/80 border border-cosmo-500/40 text-xs text-white/80 animate-fadeIn delay-300 hover:bg-cosmo-700 hover:border-eco-green/30 transition-all duration-300"
+                        >
+                          {ms}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="mt-6 flex items-center gap-2">
+                      <span className="px-4 py-2 rounded-md bg-gradient-to-r from-eco-green to-lime-accent text-cosmo-500 text-sm font-semibold border border-white/20 shadow-lg relative overflow-hidden group-hover:shadow-eco-green/20 transition-all duration-300">
+                        <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
+                        <span className="relative z-10">
+                          {activity.article}
+                        </span>
                       </span>
                     </div>
-                    <div className="flex-1 bg-cosmo-700/60 rounded-lg p-4 flex flex-col items-center border border-cosmo-500/30 backdrop-blur-sm hover:border-eco-green/30 hover:bg-cosmo-700/80 transition-all duration-300 transform hover:-translate-y-1">
-                      <span className="text-xs text-white/60 mb-1">CapEx</span>
-                      <span className="text-lg font-semibold">
-                        {activity.capEx}
-                      </span>
-                    </div>
-                    <div className="flex-1 bg-cosmo-700/60 rounded-lg p-4 flex flex-col items-center border border-cosmo-500/30 backdrop-blur-sm hover:border-eco-green/30 hover:bg-cosmo-700/80 transition-all duration-300 transform hover:-translate-y-1">
-                      <span className="text-xs text-white/60 mb-1">
-                        Turnover
-                      </span>
-                      <span className="text-lg font-semibold">
-                        {activity.turnover}
-                      </span>
-                    </div>
                   </div>
-                  <div className="mb-4 flex flex-wrap gap-2">
-                    {activity.criteria.map((c, i) => (
-                      <span
-                        key={c.label + i}
-                        className={`px-3 py-1 rounded-full border text-xs font-medium ${c.color} flex items-center gap-1 animate-fadeIn transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-eco-green/10`}
-                        style={{ animationDelay: `${0.3 + i * 0.05}s` }}
-                      >
-                        {c.label}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex flex-wrap gap-2 mb-2 mt-2">
-                    {activity.minimumSafeguards.map((ms, i) => (
-                      <span
-                        key={ms + i}
-                        className="px-2 py-1 rounded bg-cosmo-700/80 border border-cosmo-500/40 text-xs text-white/80 animate-fadeIn delay-300 hover:bg-cosmo-700 hover:border-eco-green/30 transition-all duration-300"
-                      >
-                        {ms}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mt-6 flex items-center gap-2">
-                    <span className="px-4 py-2 rounded-md bg-gradient-to-r from-eco-green to-lime-accent text-cosmo-500 text-sm font-semibold border border-white/20 shadow-lg relative overflow-hidden group-hover:shadow-eco-green/20 transition-all duration-300">
-                      <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-                      <span className="relative z-10">{activity.article}</span>
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Non-green Activities */}
+          {/* Non-green Activities (mantener como estático) */}
           <div className="mb-12 relative">
             <div className="bg-gray-400 text-cosmo-800 text-center py-3.5 rounded-md mb-10 font-semibold text-lg border border-gray-500/20 transition-all duration-300 hover:shadow-md hover:scale-[1.01] cursor-pointer">
               Non-green
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {nonGreenActivities.map((activity, idx) => (
+              {staticData.nonGreenActivities.map((activity, idx) => (
                 <div
                   key={activity.name}
                   className="group bg-cosmo-800/70 border border-white/10 rounded-2xl p-8 shadow-xl backdrop-blur-md transition-all duration-500 hover:scale-[1.03] hover:bg-cosmo-800/90 hover:border-red-500/30 animate-fadeIn relative overflow-hidden"

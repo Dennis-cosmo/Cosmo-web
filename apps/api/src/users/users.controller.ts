@@ -12,4 +12,11 @@ export class UsersController {
     const userId = req.user.id;
     return this.usersService.findOneById(userId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get("dashboard-profile")
+  async getDashboardProfile(@Req() req) {
+    const userId = req.user.id;
+    return this.usersService.getUserProfile(userId);
+  }
 }
