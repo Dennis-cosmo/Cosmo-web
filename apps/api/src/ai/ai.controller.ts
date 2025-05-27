@@ -14,6 +14,11 @@ import { ExpenseClassificationDto } from "./dto/expense-classification.dto";
 import { TaxonomyClassificationResponse } from "./interfaces/ai-response.interface";
 import { AiService } from "./services/ai.service";
 import { AiProviderType } from "./services/ai-provider.factory";
+import { SustainabilityAnalyzerService } from "./services/sustainability-analyzer.service";
+import {
+  SustainabilityAnalysisDto,
+  SustainabilityAnalysisResultDto,
+} from "./dto/sustainability-analysis.dto";
 
 @ApiTags("ai")
 @Controller("ai")
@@ -22,7 +27,8 @@ export class AiController {
 
   constructor(
     private readonly expenseClassifierService: ExpenseClassifierService,
-    private readonly aiService: AiService
+    private readonly aiService: AiService,
+    private readonly sustainabilityAnalyzer: SustainabilityAnalyzerService
   ) {}
 
   @Post("classify-expense")
@@ -38,6 +44,9 @@ export class AiController {
   async classifyExpense(
     @Body() dto: ExpenseClassificationDto
   ): Promise<TaxonomyClassificationResponse> {
+    this.logger.log(
+      `Recibida solicitud para clasificar gasto: ${dto.expense.id}`
+    );
     return this.expenseClassifierService.classifyExpense(dto);
   }
 
@@ -54,7 +63,31 @@ export class AiController {
   async classifyExpenses(
     @Body() dtos: ExpenseClassificationDto[]
   ): Promise<Record<string, TaxonomyClassificationResponse>> {
+    this.logger.log(`Recibida solicitud para clasificar ${dtos.length} gastos`);
     return this.expenseClassifierService.classifyExpenses(dtos);
+  }
+
+  @Post("analyze-sustainability")
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: "Analiza la sostenibilidad de un conjunto de gastos",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Análisis de sostenibilidad completado",
+    type: SustainabilityAnalysisResultDto,
+  })
+  async analyzeSustainability(
+    @Body() analysisDto: SustainabilityAnalysisDto
+  ): Promise<SustainabilityAnalysisResultDto> {
+    this.logger.log(
+      `Recibida solicitud para análisis de sostenibilidad de ${analysisDto.expenses.length} gastos`
+    );
+    return this.sustainabilityAnalyzer.analyzeSustainability(
+      analysisDto.expenses,
+      analysisDto.userContext,
+      analysisDto.options
+    );
   }
 
   @Get("test")

@@ -9,6 +9,7 @@ import { AiCache } from "./entities/ai-cache.entity";
 import { OpenAiProvider } from "./providers/openai.provider";
 import { DeepSeekProvider } from "./providers/deepseek.provider";
 import { AiProviderFactory } from "./services/ai-provider.factory";
+import { SustainabilityAnalyzerService } from "./services/sustainability-analyzer.service";
 
 @Module({
   imports: [ConfigModule, TypeOrmModule.forFeature([AiCache])],
@@ -20,12 +21,14 @@ import { AiProviderFactory } from "./services/ai-provider.factory";
     OpenAiProvider,
     DeepSeekProvider,
     AiProviderFactory,
+    SustainabilityAnalyzerService,
   ],
   exports: [
     AiService,
     AiCacheService,
     ExpenseClassifierService,
     AiProviderFactory,
+    SustainabilityAnalyzerService,
   ],
 })
 export class AiModule {}

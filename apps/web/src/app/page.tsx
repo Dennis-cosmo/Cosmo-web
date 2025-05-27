@@ -16,9 +16,9 @@ export default function Home() {
               </span>
             </h2>
             <p className="text-xl mb-12 text-white/90 max-w-2xl mx-auto opacity-0 animate-[fadeIn_1s_ease-out_0.8s_forwards]">
-              Cosmo automatically categorizes expenses towards the taxonomy
-              (green vs. non-green), calculates carbon footprints, and tracks
-              sustainability performance.
+              Cosmo automatically categorizes expenses towards the taxonomy ,
+              calculates carbon footprints, and tracks sustainability
+              performance.
             </p>
             <div className="flex justify-center space-x-6 opacity-0 animate-[fadeIn_1s_ease-out_1.1s_forwards]">
               <button className="bg-eco-green hover:bg-lime-accent text-cosmo-500 px-8 py-4 text-lg rounded-md transition-all hover:scale-105 font-medium">
@@ -69,7 +69,7 @@ export default function Home() {
                 <h3 className="text-lg font-semibold text-white">ESG Score</h3>
                 <span className="text-eco-green text-sm">+5 points</span>
               </div>
-              <div className="text-3xl font-bold text-white mb-2">A-</div>
+              <div className="text-3xl font-bold text-white mb-2">7.4</div>
               <div className="h-2 bg-cosmo-700 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-eco-green to-lime-accent w-4/5"></div>
               </div>
@@ -137,7 +137,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-4 text-white">
-                Lack of Standardized Metrics
+                Standardized Metrics
               </h3>
               <p className="text-white/90">
                 Data is often reported using different methodologies (e.g.,
