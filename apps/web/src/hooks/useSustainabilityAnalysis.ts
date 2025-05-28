@@ -17,7 +17,8 @@ export interface SustainabilityAnalysisResult {
   };
 }
 
-const ANALYSIS_TIMEOUT_MS = 90000; // 90 segundos
+const POLLING_INTERVAL_MS = 3000; // 3 segundos
+const MAX_POLLING_TIME_MS = 5 * 60 * 1000; // 5 minutos
 
 /**
  * Hook para analizar la sostenibilidad de los gastos
@@ -31,7 +32,7 @@ export function useSustainabilityAnalysis() {
   const { profile } = useUserProfile();
 
   /**
-   * Analiza la sostenibilidad de un conjunto de gastos
+   * Analiza la sostenibilidad de un conjunto de gastos usando jobs asíncronos
    * @param expenses Lista de gastos para analizar
    */
   const analyzeExpenses = async (
@@ -41,60 +42,61 @@ export function useSustainabilityAnalysis() {
     setError(null);
     setResult(null);
     try {
-      // Validar que haya gastos para analizar
       if (!expenses || expenses.length === 0) {
         throw new Error("No hay gastos para analizar");
       }
-
-      // Preparar información del usuario para contextualizar el análisis
       const userContext = {
         euTaxonomySectorIds: profile?.euTaxonomySectorIds || [],
         euTaxonomySectorNames: profile?.euTaxonomySectorNames || [],
         euTaxonomyActivities: profile?.euTaxonomyActivities || [],
         companyName: profile?.companyName || "",
       };
-
-      // Timeout manual para UX robusta
-      const controller = new AbortController();
-      const timeout = setTimeout(() => {
-        controller.abort();
-      }, ANALYSIS_TIMEOUT_MS);
-
-      let analysisResult: SustainabilityAnalysisResult;
-      try {
-        // Usar fetchApi directamente para pasar la señal
-        const response = await fetchApi("/ai/analyze-sustainability", {
-          method: "POST",
-          body: JSON.stringify({
-            expenses,
-            userContext,
-            options: {
-              temperature: 0.3,
-              maxTokens: 3000,
-              responseFormat: "json_object",
-            },
-          }),
-          signal: controller.signal,
-          headers: {
-            "Content-Type": "application/json",
+      // 1. Solicitar el análisis y obtener jobId
+      const response = await fetchApi("/ai/analyze-sustainability", {
+        method: "POST",
+        body: JSON.stringify({
+          expenses,
+          userContext,
+          options: {
+            temperature: 0.3,
+            maxTokens: 3000,
+            responseFormat: "json_object",
           },
-        });
-        analysisResult = await response.json();
-      } finally {
-        clearTimeout(timeout);
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const { jobId } = await response.json();
+      if (!jobId) throw new Error("No se pudo crear el job de análisis");
+      // 2. Polling al endpoint de resultado
+      let pollingTime = 0;
+      let pollingResult = null;
+      while (pollingTime < MAX_POLLING_TIME_MS) {
+        await new Promise((res) => setTimeout(res, POLLING_INTERVAL_MS));
+        pollingTime += POLLING_INTERVAL_MS;
+        const pollRes = await fetchApi(
+          `/ai/analyze-sustainability-result?jobId=${jobId}`
+        );
+        const pollData = await pollRes.json();
+        if (pollData.status === "done") {
+          pollingResult = pollData.result;
+          break;
+        }
+        if (pollData.status === "error") {
+          throw new Error(
+            pollData.error || "Error en el análisis de sostenibilidad"
+          );
+        }
+        // Si status es pending, sigue esperando
       }
-
-      // Validar la respuesta
-      if (
-        !analysisResult ||
-        !analysisResult.sustainableExpenses ||
-        !analysisResult.nonSustainableExpenses
-      ) {
-        throw new Error("Respuesta inválida del servidor");
+      if (!pollingResult) {
+        throw new Error(
+          "El análisis tardó demasiado. Intenta de nuevo más tarde."
+        );
       }
-
-      setResult(analysisResult);
-      return analysisResult;
+      setResult(pollingResult);
+      return pollingResult;
     } catch (err: any) {
       let errorMessage =
         err.name === "AbortError"
@@ -105,8 +107,6 @@ export function useSustainabilityAnalysis() {
       setError(errorMessage);
       setResult(null);
       console.error("Error en análisis de sostenibilidad:", err);
-
-      // Devolver un resultado vacío en caso de error
       const emptyResult: SustainabilityAnalysisResult = {
         sustainableExpenses: [],
         nonSustainableExpenses: [],
@@ -121,14 +121,12 @@ export function useSustainabilityAnalysis() {
           totalTokens: 0,
         },
       };
-
       return emptyResult;
     } finally {
       setLoading(false);
     }
   };
 
-  // Permitir reintentar desde el modal
   const retry = (expenses: any[]) => analyzeExpenses(expenses);
 
   return {
@@ -137,7 +135,7 @@ export function useSustainabilityAnalysis() {
     result,
     analyzeExpenses,
     retry,
-    setResult, // Para control manual si se requiere
+    setResult,
     setError,
   };
 }

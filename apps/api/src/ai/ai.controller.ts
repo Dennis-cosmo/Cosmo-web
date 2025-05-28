@@ -14,11 +14,15 @@ import { ExpenseClassificationDto } from "./dto/expense-classification.dto";
 import { TaxonomyClassificationResponse } from "./interfaces/ai-response.interface";
 import { AiService } from "./services/ai.service";
 import { AiProviderType } from "./services/ai-provider.factory";
-import { SustainabilityAnalyzerService } from "./services/sustainability-analyzer.service";
+import {
+  SustainabilityAnalyzerService,
+  SustainabilityJobService,
+} from "./services/sustainability-analyzer.service";
 import {
   SustainabilityAnalysisDto,
   SustainabilityAnalysisResultDto,
 } from "./dto/sustainability-analysis.dto";
+import { SustainabilityJobRedisService } from "./services/sustainability-job-redis.service";
 
 @ApiTags("ai")
 @Controller("ai")
@@ -70,24 +74,65 @@ export class AiController {
   @Post("analyze-sustainability")
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
-    summary: "Analiza la sostenibilidad de un conjunto de gastos",
+    summary: "Analiza la sostenibilidad de un conjunto de gastos (asíncrono)",
   })
   @ApiResponse({
     status: 200,
-    description: "Análisis de sostenibilidad completado",
-    type: SustainabilityAnalysisResultDto,
+    description: "Job creado para análisis de sostenibilidad",
+    type: Object,
   })
   async analyzeSustainability(
     @Body() analysisDto: SustainabilityAnalysisDto
-  ): Promise<SustainabilityAnalysisResultDto> {
+  ): Promise<{ jobId: string }> {
     this.logger.log(
-      `Recibida solicitud para análisis de sostenibilidad de ${analysisDto.expenses.length} gastos`
+      `Recibida solicitud para análisis de sostenibilidad de ${analysisDto.expenses.length} gastos (modo job)`
     );
-    return this.sustainabilityAnalyzer.analyzeSustainability(
-      analysisDto.expenses,
-      analysisDto.userContext,
-      analysisDto.options
-    );
+    // Crear job
+    const job = await SustainabilityJobRedisService.createJob();
+    // Procesar en background
+    (async () => {
+      try {
+        const result = await this.sustainabilityAnalyzer.analyzeSustainability(
+          analysisDto.expenses,
+          analysisDto.userContext,
+          analysisDto.options
+        );
+        await SustainabilityJobRedisService.setJobResult(job.id, result);
+      } catch (err: any) {
+        await SustainabilityJobRedisService.setJobError(
+          job.id,
+          err.message || "Error desconocido"
+        );
+      }
+    })();
+    return { jobId: job.id };
+  }
+
+  @Get("analyze-sustainability-result")
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary:
+      "Consulta el estado y resultado de un análisis de sostenibilidad por jobId",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Estado y resultado del análisis",
+    type: Object,
+  })
+  async getSustainabilityAnalysisResult(
+    @Query("jobId") jobId: string
+  ): Promise<any> {
+    const job = await SustainabilityJobRedisService.getJob(jobId);
+    if (!job) {
+      return { status: "not_found" };
+    }
+    if (job.status === "done") {
+      return { status: "done", result: job.result };
+    }
+    if (job.status === "error") {
+      return { status: "error", error: job.error };
+    }
+    return { status: job.status };
   }
 
   @Get("test")

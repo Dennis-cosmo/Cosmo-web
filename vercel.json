@@ -1,0 +1,9 @@
+{
+  "buildCommand": "cd ../.. && yarn build",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs",
+  "installCommand": "yarn install",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://tu-api.com"
+  }
+}

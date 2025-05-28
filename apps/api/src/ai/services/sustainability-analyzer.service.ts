@@ -237,3 +237,60 @@ export class SustainabilityAnalyzerService {
     }
   }
 }
+
+// --- Job system in-memory ---
+export type SustainabilityJobStatus = "pending" | "done" | "error";
+export interface SustainabilityJob {
+  id: string;
+  status: SustainabilityJobStatus;
+  result?: SustainabilityAnalysisResultDto;
+  error?: string;
+  createdAt: number;
+}
+
+const jobs: Record<string, SustainabilityJob> = {};
+
+function generateJobId() {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
+}
+
+export class SustainabilityJobService {
+  static createJob(): SustainabilityJob {
+    const id = generateJobId();
+    const job: SustainabilityJob = {
+      id,
+      status: "pending",
+      createdAt: Date.now(),
+    };
+    jobs[id] = job;
+    return job;
+  }
+
+  static setJobResult(id: string, result: SustainabilityAnalysisResultDto) {
+    if (jobs[id]) {
+      jobs[id].status = "done";
+      jobs[id].result = result;
+    }
+  }
+
+  static setJobError(id: string, error: string) {
+    if (jobs[id]) {
+      jobs[id].status = "error";
+      jobs[id].error = error;
+    }
+  }
+
+  static getJob(id: string): SustainabilityJob | undefined {
+    return jobs[id];
+  }
+
+  // Limpieza de jobs viejos (opcional)
+  static cleanupOldJobs(maxAgeMs = 1000 * 60 * 60) {
+    const now = Date.now();
+    for (const id in jobs) {
+      if (now - jobs[id].createdAt > maxAgeMs) {
+        delete jobs[id];
+      }
+    }
+  }
+}

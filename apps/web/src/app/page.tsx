@@ -1,4 +1,44 @@
+"use client";
+import { useState, useRef } from "react";
+
 export default function Home() {
+  // Estado para feedback del formulario
+  const [leadStatus, setLeadStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [leadError, setLeadError] = useState<string>("");
+  const [showToast, setShowToast] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Handler para el envío del formulario
+  const handleLeadSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLeadStatus("loading");
+    setLeadError("");
+    const form = e.currentTarget;
+    const data = {
+      companyName: form.companyName.value,
+      contactEmail: form.contactEmail.value,
+      contactName: form.contactName.value,
+      message: form.message.value,
+    };
+    try {
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("No se pudo enviar el formulario");
+      setLeadStatus("success");
+      setShowToast(true);
+      form.reset();
+      setTimeout(() => setShowToast(false), 4000);
+    } catch (err: any) {
+      setLeadStatus("error");
+      setLeadError(err.message || "Error desconocido");
+    }
+  };
+
   return (
     <>
       {/* Hero Section con mini dashboard */}
@@ -274,8 +314,88 @@ export default function Home() {
               </button>
             </div>
           </div>
+          {/* Formulario de interés para empresas */}
+          <div className="max-w-2xl mx-auto mt-12 bg-cosmo-800/80 border border-eco-green/30 rounded-2xl shadow-lg p-8 backdrop-blur-sm">
+            <h3 className="text-2xl font-bold text-white mb-2 text-center">
+              ¿Listo para transformar el impacto sostenible de tu empresa?
+            </h3>
+            <p className="text-white/80 mb-6 text-center">
+              Solicita acceso anticipado y prueba Cosmo en tu organización.
+            </p>
+            <form
+              className="space-y-6"
+              ref={formRef}
+              onSubmit={handleLeadSubmit}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-white mb-1">
+                    Nombre de la empresa
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    name="companyName"
+                    className="w-full px-4 py-2 rounded-md bg-cosmo-700 border border-eco-green/30 text-white focus:ring-2 focus:ring-eco-green focus:outline-none"
+                    placeholder="Ej: GreenTech Solutions"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white mb-1">
+                    Email de contacto
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    name="contactEmail"
+                    className="w-full px-4 py-2 rounded-md bg-cosmo-700 border border-eco-green/30 text-white focus:ring-2 focus:ring-eco-green focus:outline-none"
+                    placeholder="nombre@empresa.com"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-white mb-1">
+                    Tu nombre
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    name="contactName"
+                    className="w-full px-4 py-2 rounded-md bg-cosmo-700 border border-eco-green/30 text-white focus:ring-2 focus:ring-eco-green focus:outline-none"
+                    placeholder="Nombre y apellido"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white mb-1">
+                    Mensaje o interés (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    name="message"
+                    className="w-full px-4 py-2 rounded-md bg-cosmo-700 border border-eco-green/30 text-white focus:ring-2 focus:ring-eco-green focus:outline-none"
+                    placeholder="¿Qué te gustaría lograr con Cosmo?"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <button
+                  type="submit"
+                  disabled={leadStatus === "loading"}
+                  className="bg-eco-green hover:bg-lime-accent text-cosmo-900 font-semibold px-8 py-3 rounded-md shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-eco-green focus:ring-offset-2"
+                >
+                  Solicitar acceso
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </section>
+      {showToast && (
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-eco-green text-cosmo-900 px-6 py-3 rounded-lg shadow-lg font-semibold animate-fadeIn">
+          ¡Datos enviados con éxito! Nos pondremos en contacto contigo pronto.
+        </div>
+      )}
     </>
   );
 }

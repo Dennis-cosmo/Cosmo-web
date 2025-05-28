@@ -12,6 +12,8 @@ import { ExpensesModule } from "./expenses/expenses.module";
 import { ReportsModule } from "./reports/reports.module";
 import { AiModule } from "./ai/ai.module";
 import { TaxonomyModule } from "./taxonomy/taxonomy.module";
+import { LeadsModule } from "./leads/leads.module";
+import { CompanyLead } from "./leads/entities/company-lead.entity";
 
 @Module({
   imports: [
@@ -27,10 +29,11 @@ import { TaxonomyModule } from "./taxonomy/taxonomy.module";
       useFactory: (configService: ConfigService) => ({
         type: "postgres",
         url: configService.get<string>("DATABASE_URL"),
-        entities: [User, Expense, Report],
+        entities: [User, Expense, Report, CompanyLead],
         migrations: dataSource.options.migrations,
         logging: configService.get<string>("NODE_ENV") === "development",
-        synchronize: configService.get<string>("NODE_ENV") === "development",
+        synchronize: true,
+        // synchronize: configService.get<string>("NODE_ENV") === "development",
       }),
     }),
 
@@ -49,6 +52,7 @@ import { TaxonomyModule } from "./taxonomy/taxonomy.module";
     ReportsModule,
     AiModule,
     TaxonomyModule,
+    LeadsModule,
   ],
   controllers: [AppController],
   providers: [
