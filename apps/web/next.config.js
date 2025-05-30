@@ -1,15 +1,28 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  // Configuración de variables de entorno
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL || "http://localhost:3000",
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   },
+
+  // Transpilación de paquetes del monorepo
   transpilePackages: ["@cosmo/shared"],
+
+  // Configuración de salida para Railway
+  output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
 
   // Configuración de rewrite para redirigir peticiones /api a la API real
   async rewrites() {
+    // En Railway, usamos variables de entorno dinámicas
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.API_URL ||
+      "http://api:4000";
+
     return [
       // Excluimos las rutas de NextAuth de la redirección
       {
@@ -19,7 +32,7 @@ const nextConfig = {
       // Redirigimos el resto de las peticiones /api a la API real
       {
         source: "/api/:path*",
-        destination: "http://api:4000/:path*", // Usa el nombre del servicio Docker
+        destination: `${apiUrl}/:path*`,
       },
     ];
   },
@@ -45,6 +58,17 @@ const nextConfig = {
         ],
       },
     ];
+  },
+
+  // Configuración de imágenes para Railway
+  images: {
+    domains: ["localhost"],
+    unoptimized: process.env.NODE_ENV === "production",
+  },
+
+  // Configuración experimental para mejorar performance
+  experimental: {
+    appDir: false,
   },
 };
 

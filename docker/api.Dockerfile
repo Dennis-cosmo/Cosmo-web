@@ -24,12 +24,32 @@ COPY . .
 # Reinstalar específicamente openai con la versión correcta
 RUN cd /app/apps/api && npm uninstall openai && npm install openai@3.3.0 --save
 
-# Limpiar directorio de compilación
-RUN rm -rf /app/apps/api/dist
+# Build for production
+ARG NODE_ENV=production
+ENV NODE_ENV=$NODE_ENV
 
-# Para desarrollo, usamos el script de dev directamente
-CMD ["yarn", "workspace", "@cosmo/api", "dev"]
+RUN yarn workspace @cosmo/api build
 
-# Para producción, usaríamos:
-# RUN yarn workspace @cosmo/api build
-# CMD ["yarn", "workspace", "@cosmo/api", "start:prod"] 
+# Production stage
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+# Instalar dependencias de runtime
+RUN apk add --no-cache dumb-init
+
+ENV NODE_ENV=production
+
+# Copy built application and dependencies
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+# Expose port
+EXPOSE 4000
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["yarn", "workspace", "@cosmo/api", "start:prod"] 
