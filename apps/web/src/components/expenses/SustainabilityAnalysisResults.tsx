@@ -25,8 +25,28 @@ export default function SustainabilityAnalysisResults({
   };
 
   // Utilidad para mostrar un campo o 'N/A' si no existe
-  const safe = (val: any) =>
-    val !== undefined && val !== null && val !== "" ? val : "N/A";
+  const safe = (val: any) => {
+    if (val === undefined || val === null || val === "") {
+      return "N/A";
+    }
+
+    // Si es un objeto, convertirlo a string JSON legible
+    if (typeof val === "object") {
+      try {
+        return JSON.stringify(val, null, 2);
+      } catch (error) {
+        return "Objeto complejo";
+      }
+    }
+
+    // Si es un array, convertirlo a string
+    if (Array.isArray(val)) {
+      return val.join(", ");
+    }
+
+    // Para otros tipos, convertir a string
+    return String(val);
+  };
 
   // Obtener todas las claves extra de los gastos (además de las estándar)
   const getExtraKeys = (expenses: any[], standardKeys: string[]) => {
