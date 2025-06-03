@@ -43,4 +43,19 @@ yarn-error.log*
 # IDE
 .idea
 .vscode/*
-!.vscode/extensions.json 
+!.vscode/extensions.json
+
+# Variables de entorno
+.env
+.env.local
+.env.production
+.env.staging
+
+# Variables de entorno por app
+apps/*/.env*
+!apps/*/.env.example
+
+# Mantener solo examples
+!.env.example
+!.env.sample
+!env.*.sample 

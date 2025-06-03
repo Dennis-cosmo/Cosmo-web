@@ -1,0 +1,237 @@
+services:
+  # Reverse Proxy - Nginx con SSL
+  nginx:
+    container_name: ${COMPOSE_PROJECT_NAME}-nginx
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.hetzner.conf:/etc/nginx/nginx.conf
+      - ./docker/ssl:/etc/ssl/certs
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      - web
+      - api
+    restart: always
+    networks:
+      - cosmo-network
+    labels:
+      - "gdpr.service=proxy"
+      - "gdpr.data-location=EU"
+
+  # Frontend - Next.js
+  web:
+    container_name: ${COMPOSE_PROJECT_NAME}-web
+    build:
+      context: /app
+      dockerfile: ./docker/web.hetzner.Dockerfile
+      args:
+        - NODE_ENV=production
+        - GDPR_ENABLED=${GDPR_ENABLED}
+    environment:
+      # Core Next.js
+      - NODE_ENV=${NODE_ENV}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
+      # GDPR Compliance
+      - GDPR_ENABLED=${GDPR_ENABLED}
+      - DATA_PROCESSING_REGION=${DATA_PROCESSING_REGION}
+      - COOKIE_CONSENT_REQUIRED=${COOKIE_CONSENT_REQUIRED}
+
+      # QuickBooks Production
+      - QUICKBOOKS_CLIENT_ID=${QUICKBOOKS_CLIENT_ID}
+      - QUICKBOOKS_CLIENT_SECRET=${QUICKBOOKS_CLIENT_SECRET}
+      - QUICKBOOKS_REDIRECT_URI=${QUICKBOOKS_REDIRECT_URI}
+      - QUICKBOOKS_ENVIRONMENT=${QUICKBOOKS_ENVIRONMENT}
+
+      # Domain
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      - api
+    restart: always
+    networks:
+      - cosmo-network
+    expose:
+      - "3000"
+    volumes:
+      - web-logs:/app/.next/cache
+    labels:
+      - "gdpr.service=frontend"
+      - "gdpr.cookies=session-only"
+      - "gdpr.data-location=EU"
+
+  # Backend API - NestJS
+  api:
+    container_name: ${COMPOSE_PROJECT_NAME}-api
+    build:
+      context: /app
+      dockerfile: ./docker/api.hetzner.Dockerfile
+      args:
+        - NODE_ENV=production
+        - GDPR_ENABLED=${GDPR_ENABLED}
+    environment:
+      # Core API
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - FRONTEND_URL=${FRONTEND_URL}
+
+      # Database
+      - DATABASE_URL=${DATABASE_URL}
+
+      # Redis
+      - REDIS_URL=${REDIS_URL}
+
+      # Authentication
+      - JWT_SECRET=${JWT_SECRET}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+
+      # AI Services
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL}
+      - DEFAULT_AI_PROVIDER=${DEFAULT_AI_PROVIDER}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+      # Rate Limiting
+      - THROTTLE_TTL=${THROTTLE_TTL}
+      - THROTTLE_LIMIT=${THROTTLE_LIMIT}
+
+      # GDPR Compliance
+      - GDPR_ENABLED=${GDPR_ENABLED}
+      - DATA_PROCESSING_REGION=${DATA_PROCESSING_REGION}
+      - DATA_RETENTION_DAYS=${DATA_RETENTION_DAYS}
+      - LOG_RETENTION_DAYS=${LOG_RETENTION_DAYS}
+
+      # Monitoring
+      - LOG_LEVEL=${LOG_LEVEL}
+      - ENABLE_LOGGING=${ENABLE_LOGGING}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+    networks:
+      - cosmo-network
+    expose:
+      - "4000"
+    volumes:
+      - api-logs:/app/logs
+    labels:
+      - "gdpr.service=api"
+      - "gdpr.data-processing=EU-only"
+      - "gdpr.data-location=EU"
+
+  # PostgreSQL Database - GDPR Compliant
+  postgres:
+    container_name: ${COMPOSE_PROJECT_NAME}-postgres
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+      # GDPR Compliance settings
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres-backup:/backup
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d
+      - ./docker/postgres-gdpr-config:/etc/postgresql/conf.d
+    restart: always
+    networks:
+      - cosmo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    expose:
+      - "5432"
+    labels:
+      - "gdpr.service=database"
+      - "gdpr.data-storage=EU"
+      - "gdpr.encryption=required"
+      - "backup.enabled=true"
+
+  # Redis Cache - GDPR Compliant
+  redis:
+    container_name: ${COMPOSE_PROJECT_NAME}-redis
+    image: redis:7-alpine
+    command: >
+      redis-server 
+      --appendonly yes 
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+      - redis-logs:/var/log/redis
+    restart: always
+    networks:
+      - cosmo-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "auth", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    expose:
+      - "6379"
+    labels:
+      - "gdpr.service=cache"
+      - "gdpr.session-storage=EU"
+      - "gdpr.data-location=EU"
+
+  # Backup Service
+  backup:
+    container_name: ${COMPOSE_PROJECT_NAME}-backup
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data:ro
+      - ./docker/postgres-backup:/backup
+      - ./scripts/backup.sh:/backup.sh
+    command: >
+      sh -c "
+        apk add --no-cache dcron &&
+        echo '${BACKUP_SCHEDULE} /backup.sh' | crontab - &&
+        crond -f
+      "
+    depends_on:
+      - postgres
+    restart: always
+    networks:
+      - cosmo-network
+    labels:
+      - "gdpr.service=backup"
+      - "gdpr.data-location=EU"
+
+volumes:
+  postgres-data:
+    labels:
+      - "gdpr.data-type=persistent"
+      - "gdpr.location=EU"
+  redis-data:
+    labels:
+      - "gdpr.data-type=cache"
+      - "gdpr.location=EU"
+  nginx-logs:
+  api-logs:
+  web-logs:
+  redis-logs:
+
+networks:
+  cosmo-network:
+    driver: bridge
+    labels:
+      - "gdpr.network=EU"
+      - "gdpr.isolation=production"

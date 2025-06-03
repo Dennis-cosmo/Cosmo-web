@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "node ../../scripts/env-loader.js && next dev",
+    "build": "node ../../scripts/env-loader.js && next build",
+    "start": "node ../../scripts/env-loader.js && next start",
+    "build:production": "NODE_ENV=production node ../../scripts/env-loader.js && next build",
+    "start:production": "NODE_ENV=production node ../../scripts/env-loader.js && next start",
     "lint": "next lint",
     "clean": "rm -rf .next && rm -rf node_modules"
   },
