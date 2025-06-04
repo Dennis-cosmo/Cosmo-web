@@ -6,6 +6,10 @@ import {
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../../../lib/auth";
 
+// Marcar como ruta dinámica para evitar pre-renderizado estático
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 /**
  * Ruta para manejar el callback de autenticación de QuickBooks
  * GET /api/integrations/quickbooks/callback

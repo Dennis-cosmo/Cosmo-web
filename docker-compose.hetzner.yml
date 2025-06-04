@@ -29,6 +29,11 @@ services:
       args:
         - NODE_ENV=production
         - GDPR_ENABLED=${GDPR_ENABLED}
+        - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+        - NEXTAUTH_URL=${NEXTAUTH_URL}
+        - QUICKBOOKS_CLIENT_ID=${QUICKBOOKS_CLIENT_ID}
+        - QUICKBOOKS_CLIENT_SECRET=${QUICKBOOKS_CLIENT_SECRET}
+        - QUICKBOOKS_REDIRECT_URI=${QUICKBOOKS_REDIRECT_URI}
     environment:
       # Core Next.js
       - NODE_ENV=${NODE_ENV}

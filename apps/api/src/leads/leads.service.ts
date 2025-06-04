@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import type { Repository } from "typeorm";
 import { CompanyLead } from "./entities/company-lead.entity";
 import { CreateCompanyLeadDto } from "./dto/create-company-lead.dto";
 

@@ -13,46 +13,73 @@ WORKDIR /app
 
 # Build stage
 FROM base AS builder
-WORKDIR /app # Asegurar que estamos en /app
+WORKDIR /app
 
-# Copiar TODO el contexto de build (desde /app del host) a /app en el contenedor
-COPY . .
+# Copiar archivos de configuración primero
+COPY package.json yarn.lock turbo.json tsconfig.json ./
 
-# Verificar que los archivos cruciales están presentes DESPUÉS del COPY .
-RUN echo "[BUILD DEBUG WEB] Contenido de /app después de COPY . .:" && ls -la && \
-    echo "[BUILD DEBUG WEB] Contenido de /app/apps/web después de COPY . .:" && ls -la apps/web && \
-    if [ -f "apps/web/next.config.js" ]; then \
-        echo "[BUILD DEBUG WEB] SUCCESS: apps/web/next.config.js ENCONTRADO"; \
-    else \
-        echo "[BUILD DEBUG WEB] ERROR: apps/web/next.config.js NO ENCONTRADO"; \
-        exit 1; \
-    fi
+# Copiar directorios de workspace
+COPY apps/ ./apps/
+COPY packages/ ./packages/
+COPY scripts/ ./scripts/
 
-# Instalar todas las dependencias del monorepo
-RUN \
-  if [ -f yarn.lock ]; then yarn install --frozen-lockfile --check-files; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+# Verificar estructura después de copiar
+RUN echo "[BUILD DEBUG WEB] Estructura después de COPY:" && \
+    ls -la && \
+    echo "Apps:" && \
+    ls -la apps/ && \
+    echo "Packages:" && \
+    ls -la packages/ && \
+    echo "Scripts:" && \
+    ls -la scripts/ && \
+    echo "Web específico:" && \
+    ls -la apps/web/
+
+# Limpiar cualquier node_modules existente
+RUN rm -rf node_modules apps/*/node_modules packages/*/node_modules
+
+# Instalar dependencias
+RUN yarn install --frozen-lockfile
 
 # Build arguments (Next.js usa estos)
 ARG NEXT_TELEMETRY_DISABLED=1
 ARG GDPR_ENABLED=true
+ARG NODE_ENV=production
+ARG NEXTAUTH_SECRET
+ARG NEXTAUTH_URL
+ARG QUICKBOOKS_CLIENT_ID
+ARG QUICKBOOKS_CLIENT_SECRET
+ARG QUICKBOOKS_REDIRECT_URI
+
+# Exportar como variables de entorno para el build
 ENV NEXT_TELEMETRY_DISABLED=$NEXT_TELEMETRY_DISABLED
 ENV GDPR_ENABLED=$GDPR_ENABLED
-ENV NODE_ENV=production
+ENV NODE_ENV=$NODE_ENV
+ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+ENV NEXTAUTH_URL=$NEXTAUTH_URL
+ENV QUICKBOOKS_CLIENT_ID=$QUICKBOOKS_CLIENT_ID
+ENV QUICKBOOKS_CLIENT_SECRET=$QUICKBOOKS_CLIENT_SECRET
+ENV QUICKBOOKS_REDIRECT_URI=$QUICKBOOKS_REDIRECT_URI
 
-# Build dependencies first
-RUN echo "[BUILD DEBUG WEB] Construyendo @cosmo/shared..." && \
+# Build packages en orden correcto
+RUN echo "[BUILD WEB] Building @cosmo/shared..." && \
     yarn workspace @cosmo/shared build
 
-RUN echo "[BUILD DEBUG WEB] Construyendo @cosmo/ui..." && \
+RUN echo "[BUILD WEB] Building @cosmo/ui..." && \
     yarn workspace @cosmo/ui build
 
-# Build the application WEB
-RUN echo "[BUILD DEBUG WEB] Intentando construir @cosmo/web..." && \
+RUN echo "[BUILD WEB] Building @cosmo/web..." && \
     yarn workspace @cosmo/web build
+
+# Verificar que todo se construyó correctamente
+RUN echo "[BUILD WEB] Verificando builds:" && \
+    ls -la packages/shared/dist/ && \
+    ls -la packages/ui/dist/ && \
+    ls -la apps/web/.next/ && \
+    echo "[BUILD WEB] Verificando standalone:" && \
+    ls -la apps/web/.next/standalone/ && \
+    echo "[BUILD WEB] Contenido completo standalone:" && \
+    find apps/web/.next/standalone -name "*.js" | head -10
 
 # Production stage
 FROM base AS runner
@@ -67,18 +94,51 @@ ENV NEXT_TELEMETRY_DISABLED 1
 ENV GDPR_ENABLED true
 ENV DATA_PROCESSING_REGION EU
 
-# Copiar solo los artefactos necesarios de la etapa builder
-COPY --from=builder --chown=nextjs:nextjs /app/apps/web/.next/standalone ./apps/web/
-COPY --from=builder --chown=nextjs:nextjs /app/apps/web/public ./apps/web/public
-COPY --from=builder --chown=nextjs:nextjs /app/apps/web/package.json ./apps/web/package.json # Para que Next.js encuentre el script start
-COPY --from=builder --chown=nextjs:nextjs /app/apps/web/.next/static ./apps/web/.next/static
+# Copiar archivos de configuración raíz
+COPY --from=builder --chown=nextjs:nextjs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nextjs /app/yarn.lock ./yarn.lock
 
-# Copiar node_modules de producción. Next.js standalone output maneja esto de manera diferente.
-# El output standalone ya incluye los node_modules necesarios en .next/standalone/<app>/node_modules
-# pero es posible que también necesite node_modules en la raíz de la app para ciertos casos.
-# Por seguridad, copiamos los node_modules raíz también.
-COPY --from=builder --chown=nextjs:nextjs /app/node_modules ./node_modules
-COPY --from=builder --chown=nextjs:nextjs /app/apps/web/node_modules ./apps/web/node_modules
+# Copiar scripts necesarios para runtime
+COPY --from=builder --chown=nextjs:nextjs /app/scripts ./scripts
+
+# Copiar aplicación web compilada (Next.js standalone)
+COPY --from=builder --chown=nextjs:nextjs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nextjs /app/apps/web/public ./apps/web/public
+COPY --from=builder --chown=nextjs:nextjs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=nextjs:nextjs /app/apps/web/package.json ./apps/web/package.json
+
+# Copiar packages compilados necesarios
+COPY --from=builder --chown=nextjs:nextjs /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder --chown=nextjs:nextjs /app/packages/shared/package.json ./packages/shared/package.json
+COPY --from=builder --chown=nextjs:nextjs /app/packages/ui/dist ./packages/ui/dist
+COPY --from=builder --chown=nextjs:nextjs /app/packages/ui/package.json ./packages/ui/package.json
+
+# Verificar estructura en runner
+RUN echo "[RUNNER WEB] Verificando estructura copiada:" && \
+    ls -la && \
+    echo "Apps Web:" && \
+    ls -la apps/web/ && \
+    echo "Web .next:" && \
+    ls -la apps/web/.next/ && \
+    echo "Packages:" && \
+    ls -la packages/ && \
+    echo "Scripts:" && \
+    ls -la scripts/
+
+# Health check script (crear antes de cambiar de usuario)
+RUN echo 'const http = require("http"); \
+const options = { \
+  host: "localhost", \
+  port: process.env.PORT || 3000, \
+  path: "/api/health", \
+  timeout: 2000 \
+}; \
+const req = http.request(options, (res) => { \
+  process.exit(res.statusCode === 200 ? 0 : 1); \
+}); \
+req.on("error", (err) => { console.error(err); process.exit(1); }); \
+req.end();' > /app/healthcheck-web.js && \
+    chown nextjs:nextjs /app/healthcheck-web.js
 
 USER nextjs
 
@@ -86,26 +146,10 @@ EXPOSE 3000
 
 ENV PORT 3000
 
-# Health check script
-COPY --chown=nextjs:nextjs <<EOF /app/healthcheck-web.js
-const http = require('http');
-const options = {
-  host: 'localhost',
-  port: process.env.PORT || 3000,
-  path: '/api/health', // Next.js health check, asegúrate que exista
-  timeout: 2000
-};
-const req = http.request(options, (res) => {
-  process.exit(res.statusCode === 200 ? 0 : 1);
-});
-req.on('error', (err) => { console.error(err); process.exit(1); });
-req.end();
-EOF
-
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node /app/healthcheck-web.js
 
 ENTRYPOINT ["dumb-init", "--"]
-# El comando debe estar en apps/web/package.json y ejecutarse desde el dir correcto
-# CMD ["node", "apps/web/server.js"]
-CMD ["yarn", "workspace", "@cosmo/web", "start"] 
+
+# Start Next.js server from standalone build
+CMD ["node", "apps/web/server.js"] 

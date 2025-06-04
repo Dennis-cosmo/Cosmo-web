@@ -3,7 +3,7 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "../app.module";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { User } from "@cosmo/database";
-import { Repository } from "typeorm";
+import type { Repository } from "typeorm";
 import * as bcryptjs from "bcryptjs";
 
 async function fixPasswordFormat() {

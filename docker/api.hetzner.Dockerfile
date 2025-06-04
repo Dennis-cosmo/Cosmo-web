@@ -14,44 +14,31 @@ WORKDIR /app
 
 # Build stage
 FROM base AS builder
-WORKDIR /app # Asegurar que estamos en /app
+WORKDIR /app
 
-# Copiar TODO el contexto de build (desde /app del host) a /app en el contenedor
-COPY . .
+# Copiar archivos de configuración primero
+COPY package.json yarn.lock turbo.json tsconfig.json ./
 
-# Verificar que los archivos cruciales están presentes DESPUÉS del COPY .
-RUN echo "[BUILD DEBUG API] Contenido de /app después de COPY . .:" && ls -la && \
-    echo "[BUILD DEBUG API] Verificando /app/packages/database/package.json..." && \
-    if [ -f "packages/database/package.json" ]; then \
-        echo "[BUILD DEBUG API] SUCCESS: packages/database/package.json ENCONTRADO. Contenido:"; \
-        cat packages/database/package.json; \
-        # Verificar el nombre del paquete
-        grep -q '"name": "@cosmo/database"' packages/database/package.json || (echo "[BUILD DEBUG API] ERROR: El nombre en packages/database/package.json NO es @cosmo/database" && exit 1); \
-        echo "[BUILD DEBUG API] Nombre @cosmo/database verificado en package."; \
-    else \
-        echo "[BUILD DEBUG API] ERROR: packages/database/package.json NO ENCONTRADO"; \
-        exit 1; \
-    fi
+# Copiar directorios de workspace
+COPY apps/ ./apps/
+COPY packages/ ./packages/
+COPY scripts/ ./scripts/
 
-# Limpiar node_modules por si acaso antes de instalar
-RUN echo "[BUILD DEBUG API] Limpiando node_modules existentes..." && \
-    rm -rf node_modules && \
-    rm -rf apps/*/node_modules && \
-    rm -rf packages/*/node_modules
+# Verificar estructura después de copiar
+RUN echo "[BUILD DEBUG] Estructura después de COPY:" && \
+    ls -la && \
+    echo "Apps:" && \
+    ls -la apps/ && \
+    echo "Packages:" && \
+    ls -la packages/ && \
+    echo "Scripts:" && \
+    ls -la scripts/
 
-# Instalar todas las dependencias del monorepo
-RUN echo "[BUILD DEBUG API] Ejecutando yarn install..." && \
-  if [ -f yarn.lock ]; then yarn install --frozen-lockfile --check-files --verbose; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+# Limpiar cualquier node_modules existente
+RUN rm -rf node_modules apps/*/node_modules packages/*/node_modules
 
-# Verificar symlinks de workspaces después de yarn install
-RUN echo "[BUILD DEBUG API] Contenido de /app/node_modules/@cosmo/ después de yarn install:" && \
-    ls -la node_modules/@cosmo/ || echo "[BUILD DEBUG API] Directorio /app/node_modules/@cosmo/ no encontrado o vacío." && \
-    echo "[BUILD DEBUG API] Verificando específicamente el enlace para @cosmo/database en /app/node_modules/@cosmo/database:" && \
-    ls -ld node_modules/@cosmo/database || echo "[BUILD DEBUG API] Enlace node_modules/@cosmo/database no encontrado."
+# Instalar dependencias
+RUN yarn install --frozen-lockfile
 
 # Build arguments
 ARG NODE_ENV=production
@@ -59,16 +46,40 @@ ARG GDPR_ENABLED=true
 ENV NODE_ENV=$NODE_ENV
 ENV GDPR_ENABLED=$GDPR_ENABLED
 
-# Build dependencies first
-RUN echo "[BUILD DEBUG API] Construyendo @cosmo/shared..." && \
+# Build packages en orden correcto
+RUN echo "[BUILD] Building @cosmo/shared..." && \
     yarn workspace @cosmo/shared build
 
-RUN echo "[BUILD DEBUG API] Construyendo @cosmo/database..." && \
+RUN echo "[BUILD] Building @cosmo/database..." && \
     yarn workspace @cosmo/database build
 
-# Build the application API
-RUN echo "[BUILD DEBUG API] Intentando construir @cosmo/api..." && \
-    yarn workspace @cosmo/api build
+# Build API con verificaciones detalladas
+RUN echo "[BUILD] Building @cosmo/api..." && \
+    cd apps/api && \
+    echo "Current API directory:" && \
+    pwd && \
+    echo "API directory contents before build:" && \
+    ls -la && \
+    echo "API tsconfig.json contents:" && \
+    cat tsconfig.json && \
+    cd /app && \
+    yarn workspace @cosmo/api build && \
+    echo "[BUILD] Verificando que el dist se creó..." && \
+    ls -la apps/api/ && \
+    if [ ! -d "apps/api/dist" ]; then \
+        echo "[ERROR] apps/api/dist no se creó! Intentando build directo..." && \
+        cd apps/api && \
+        npx nest build && \
+        cd /app; \
+    fi && \
+    echo "[BUILD] Estado final de apps/api/dist:" && \
+    ls -la apps/api/dist/
+
+# Verificar que todo se construyó correctamente
+RUN echo "[BUILD] Verificando builds finales:" && \
+    ls -la packages/shared/dist/ && \
+    ls -la packages/database/dist/ && \
+    ls -la apps/api/dist/
 
 # Production stage
 FROM base AS runner
@@ -83,38 +94,58 @@ ENV NODE_ENV production
 ENV GDPR_ENABLED true
 ENV DATA_PROCESSING_REGION EU
 
-# Copiar solo los artefactos necesarios de la etapa builder
+# Copiar archivos de configuración raíz
+COPY --from=builder --chown=nestjs:nestjs /app/package.json ./package.json
+COPY --from=builder --chown=nestjs:nestjs /app/yarn.lock ./yarn.lock
+COPY --from=builder --chown=nestjs:nestjs /app/turbo.json ./turbo.json
+COPY --from=builder --chown=nestjs:nestjs /app/tsconfig.json ./tsconfig.json
+
+# Copiar scripts necesarios para runtime
+COPY --from=builder --chown=nestjs:nestjs /app/scripts ./scripts
+
+# Copiar node_modules del workspace
+COPY --from=builder --chown=nestjs:nestjs /app/node_modules ./node_modules
+
+# Copiar API compilada y sus archivos
 COPY --from=builder --chown=nestjs:nestjs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=nestjs:nestjs /app/apps/api/package.json ./apps/api/package.json
 
-# Copiar node_modules de producción (solo los necesarios para la API)
-# Es mejor copiar selectivamente los node_modules de la app específica o reconstruirlos.
-# Para simplificar, copiaremos los node_modules del builder, asumiendo que son los correctos.
-COPY --from=builder --chown=nestjs:nestjs /app/node_modules ./node_modules
-# Específicamente para la API, si tiene sus propios node_modules directos
-COPY --from=builder --chown=nestjs:nestjs /app/apps/api/node_modules ./apps/api/node_modules
+# Copiar packages compilados
+COPY --from=builder --chown=nestjs:nestjs /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder --chown=nestjs:nestjs /app/packages/shared/package.json ./packages/shared/package.json
+COPY --from=builder --chown=nestjs:nestjs /app/packages/database/dist ./packages/database/dist
+COPY --from=builder --chown=nestjs:nestjs /app/packages/database/package.json ./packages/database/package.json
 
-COPY --from=builder --chown=nestjs:nestjs /app/package.json ./package.json # package.json raíz por si es necesario para scripts
+# Verificar estructura en runner
+RUN echo "[RUNNER] Verificando estructura copiada:" && \
+    ls -la && \
+    echo "Apps API:" && \
+    ls -la apps/api/ && \
+    echo "Packages:" && \
+    ls -la packages/ && \
+    echo "Scripts:" && \
+    ls -la scripts/ && \
+    echo "API dist:" && \
+    ls -la apps/api/dist/
 
 # Create necessary directories for GDPR compliance
 RUN mkdir -p /app/logs /app/temp /app/exports \
     && chown -R nestjs:nestjs /app/logs /app/temp /app/exports
 
 # Health check script
-COPY --chown=nestjs:nestjs <<EOF /app/healthcheck.js
-const http = require('http');
-const options = {
-  host: 'localhost',
-  port: process.env.PORT || 4000,
-  path: '/health',
-  timeout: 2000
-};
-const req = http.request(options, (res) => {
-  process.exit(res.statusCode === 200 ? 0 : 1);
-});
-req.on('error', () => process.exit(1));
-req.end();
-EOF
+RUN echo 'const http = require("http"); \
+const options = { \
+  host: "localhost", \
+  port: process.env.PORT || 4000, \
+  path: "/health", \
+  timeout: 2000 \
+}; \
+const req = http.request(options, (res) => { \
+  process.exit(res.statusCode === 200 ? 0 : 1); \
+}); \
+req.on("error", () => process.exit(1)); \
+req.end();' > /app/healthcheck.js && \
+    chown nestjs:nestjs /app/healthcheck.js
 
 USER nestjs
 
@@ -129,4 +160,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
-CMD ["yarn", "workspace", "@cosmo/api", "start:prod"] 
+CMD ["node", "apps/api/dist/main.js"] 

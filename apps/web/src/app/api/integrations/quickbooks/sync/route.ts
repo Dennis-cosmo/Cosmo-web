@@ -8,6 +8,10 @@ import {
 import { configService } from "../../../../../lib/quickbooks/services/config";
 import { QuickBooksSyncPreferences } from "../../../../../lib/quickbooks/types";
 
+// Marcar como ruta dinámica para evitar pre-renderizado estático
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 /**
  * Ruta para obtener el estado de la sincronización
  * GET /api/integrations/quickbooks/sync

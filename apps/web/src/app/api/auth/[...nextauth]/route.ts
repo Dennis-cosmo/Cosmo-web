@@ -15,7 +15,7 @@ const credentialsSchema = z.object({
 });
 
 // Definimos las opciones de autenticación
-export const authOptions: AuthOptions = {
+const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       id: "credentials",
@@ -164,8 +164,6 @@ export const authOptions: AuthOptions = {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 horas
   },
-  // Prefijo de URL para las rutas de NextAuth
-  basePath: "/api/auth",
   // Habilitar debugging solo en desarrollo
   debug: process.env.NODE_ENV === "development",
   // Usar el secreto configurado o uno por defecto

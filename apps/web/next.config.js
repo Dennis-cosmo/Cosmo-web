@@ -68,7 +68,7 @@ const nextConfig = {
 
   // Configuración experimental para mejorar performance
   experimental: {
-    appDir: false,
+    // appDir is deprecated in Next.js 14 and enabled by default
   },
 };
 
