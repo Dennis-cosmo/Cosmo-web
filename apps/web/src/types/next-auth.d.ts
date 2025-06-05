@@ -1,20 +1,23 @@
 import { DefaultSession, DefaultUser } from "next-auth";
 import { JWT } from "next-auth/jwt";
+import NextAuth from "next-auth";
 
 declare module "next-auth" {
   /**
    * Extendemos los tipos de session.user
    */
   interface Session extends DefaultSession {
-    accessToken: string;
+    accessToken?: string;
     user: {
       id: string;
-      isAdmin: boolean;
+      email: string;
+      name: string;
       firstName: string;
       lastName: string;
+      isAdmin: boolean;
       companyName: string;
       onboardingCompleted: boolean;
-    } & DefaultSession["user"];
+    };
   }
 
   /**
@@ -22,6 +25,8 @@ declare module "next-auth" {
    */
   interface User extends DefaultUser {
     id: string;
+    email: string;
+    name: string;
     firstName: string;
     lastName: string;
     isAdmin: boolean;
@@ -37,6 +42,8 @@ declare module "next-auth/jwt" {
    */
   interface JWT {
     id: string;
+    email: string;
+    name: string;
     firstName: string;
     lastName: string;
     isAdmin: boolean;

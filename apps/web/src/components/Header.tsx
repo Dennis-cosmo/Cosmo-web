@@ -10,11 +10,18 @@ import React from "react";
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const isAuthenticated = status === "authenticated";
+  const isLoading = status === "loading";
   const [scrolled, setScrolled] = useState(false);
   const [gradientPosition, setGradientPosition] = useState(0);
+
+  // Evitar hidratación mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -171,7 +178,13 @@ export default function Header() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            {isAuthenticated ? (
+            {!mounted || isLoading ? (
+              // Mostrar placeholder durante loading/hydration
+              <div className="flex items-center space-x-3">
+                <div className="bg-white/10 animate-pulse rounded-md px-4 py-2 w-16 h-9"></div>
+                <div className="bg-eco-green/20 animate-pulse rounded-md px-4 py-2 w-20 h-9"></div>
+              </div>
+            ) : isAuthenticated ? (
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-white/90">
                   Hello, {session?.user?.firstName || "User"}

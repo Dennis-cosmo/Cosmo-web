@@ -86,6 +86,7 @@ export default function LoginForm() {
       console.log("Intentando iniciar sesión con:", formData.email);
 
       // Intentamos iniciar sesión
+      console.log("Enviando credenciales a NextAuth...");
       const result = await signIn("credentials", {
         redirect: false,
         email: formData.email,

@@ -5,23 +5,30 @@ const nextConfig = {
   // Configuración de variables de entorno
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL || "http://localhost:3000",
+    NEXTAUTH_URL:
+      process.env.NEXTAUTH_URL ||
+      (process.env.NODE_ENV === "development"
+        ? "http://localhost:3000"
+        : process.env.NEXTAUTH_URL),
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   },
 
   // Transpilación de paquetes del monorepo
   transpilePackages: ["@cosmo/shared"],
 
-  // Configuración de salida para Railway
-  output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
+  // Configuración de salida SOLO para producción real (Railway/Hetzner)
+  output:
+    process.env.DEPLOYMENT_ENV === "production" ? "standalone" : undefined,
 
   // Configuración de rewrite para redirigir peticiones /api a la API real
   async rewrites() {
-    // En Railway, usamos variables de entorno dinámicas
+    // En desarrollo Docker, usamos nombres de contenedores
     const apiUrl =
-      process.env.NEXT_PUBLIC_API_URL ||
-      process.env.API_URL ||
-      "http://api:4000";
+      process.env.NODE_ENV === "development"
+        ? process.env.NEXT_PUBLIC_API_URL || "http://api:4000"
+        : process.env.NEXT_PUBLIC_API_URL ||
+          process.env.API_URL ||
+          "http://api:4000";
 
     return [
       // Excluimos las rutas de NextAuth de la redirección
@@ -60,16 +67,25 @@ const nextConfig = {
     ];
   },
 
-  // Configuración de imágenes para Railway
+  // Configuración de imágenes
   images: {
     domains: ["localhost"],
-    unoptimized: process.env.NODE_ENV === "production",
+    unoptimized: process.env.NODE_ENV === "development",
   },
 
-  // Configuración experimental para mejorar performance
+  // Configuración experimental para desarrollo
   experimental: {
-    // appDir is deprecated in Next.js 14 and enabled by default
+    // Mejorar hot reload en desarrollo
+    ...(process.env.NODE_ENV === "development" && {
+      optimizePackageImports: ["@cosmo/shared"],
+    }),
   },
+
+  // Configuración específica para desarrollo que previene problemas SSR
+  ...(process.env.NODE_ENV === "development" && {
+    swcMinify: false,
+    poweredByHeader: false,
+  }),
 };
 
 module.exports = nextConfig;

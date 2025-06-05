@@ -61,9 +61,11 @@ export class AuthService {
       const normalizedEmail = email.toLowerCase().trim();
       this.logger.log(`Intentando autenticar usuario: ${normalizedEmail}`);
 
+      this.logger.debug(`Buscando usuario con email: ${normalizedEmail}`);
       const user = await this.usersRepository.findOne({
         where: { email: normalizedEmail },
       });
+      this.logger.debug(`Usuario encontrado: ${JSON.stringify(user, null, 2)}`);
 
       if (!user) {
         this.logger.warn(

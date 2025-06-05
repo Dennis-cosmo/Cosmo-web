@@ -1,0 +1,115 @@
+/* Estilos específicos para la página de términos */
+.prose {
+  @apply text-gray-300;
+}
+
+.prose h1 {
+  @apply text-4xl font-bold text-white mb-8 animate-fade-in;
+}
+
+.prose h2 {
+  @apply text-2xl font-semibold text-white mb-4 animate-slide-in;
+}
+
+.prose h3 {
+  @apply text-lg font-medium text-white mb-2 animate-slide-in;
+}
+
+.prose p {
+  @apply text-gray-300 mb-4 animate-fade-in;
+}
+
+.prose ul {
+  @apply list-disc pl-5 space-y-2 text-gray-300 animate-fade-in;
+}
+
+.prose table {
+  @apply min-w-full divide-y divide-gray-700 animate-fade-in;
+}
+
+.prose th {
+  @apply px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider bg-gray-800;
+}
+
+.prose td {
+  @apply px-6 py-4 whitespace-nowrap text-sm text-gray-300;
+}
+
+.prose tr {
+  @apply bg-gray-900 divide-y divide-gray-700 hover:bg-gray-800 transition-colors duration-200;
+}
+
+.prose thead {
+  @apply bg-gray-800;
+}
+
+.prose strong {
+  @apply text-white font-semibold;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+/* Retrasos para animaciones escalonadas */
+.prose > section:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.prose > section:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.prose > section:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.prose > section:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.prose > section:nth-child(5) {
+  animation-delay: 0.5s;
+}
+.prose > section:nth-child(6) {
+  animation-delay: 0.6s;
+}
+.prose > section:nth-child(7) {
+  animation-delay: 0.7s;
+}
+.prose > section:nth-child(8) {
+  animation-delay: 0.8s;
+}
+.prose > section:nth-child(9) {
+  animation-delay: 0.9s;
+}
+.prose > section:nth-child(10) {
+  animation-delay: 1s;
+}
+.prose > section:nth-child(11) {
+  animation-delay: 1.1s;
+}
+.prose > section:nth-child(12) {
+  animation-delay: 1.2s;
+}

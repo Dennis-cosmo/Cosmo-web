@@ -6,6 +6,8 @@ import { z } from "zod";
 import Link from "next/link";
 import EUTaxonomySelector from "../ui/EUTaxonomySelector";
 import { TaxonomyActivity } from "../../hooks/useTaxonomy";
+import { TermsModal } from "../modals/TermsModal";
+import { PrivacyModal } from "../modals/PrivacyModal";
 
 // Paso 1: Esquema de validación de la cuenta
 const accountSchema = z
@@ -253,6 +255,8 @@ export default function RegisterForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [generalError, setGeneralError] = useState("");
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
   // Estado para los datos del formulario
   const [formData, setFormData] = useState({
@@ -495,8 +499,10 @@ export default function RegisterForm() {
         acceptTerms: formData.acceptTerms,
       };
 
-      // Enviar datos al servidor
-      const response = await fetch("/api/register", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
+      console.log(`Usando API URL para registro: ${apiUrl}`);
+
+      const response = await fetch(`${apiUrl}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1141,12 +1147,13 @@ export default function RegisterForm() {
             />
             <label htmlFor="acceptTerms" className="ml-2 text-sm">
               Acepto los{" "}
-              <Link
-                href="/terms"
-                className="text-eco-green hover:text-lime-accent"
+              <button
+                type="button"
+                onClick={() => setIsTermsModalOpen(true)}
+                className="text-eco-green hover:text-lime-accent focus:outline-none focus:underline"
               >
                 Términos y Condiciones
-              </Link>{" "}
+              </button>{" "}
               de Cosmo
             </label>
           </div>
@@ -1168,12 +1175,13 @@ export default function RegisterForm() {
             />
             <label htmlFor="acceptPrivacy" className="ml-2 text-sm">
               Acepto la{" "}
-              <Link
-                href="/privacy"
-                className="text-eco-green hover:text-lime-accent"
+              <button
+                type="button"
+                onClick={() => setIsPrivacyModalOpen(true)}
+                className="text-eco-green hover:text-lime-accent focus:outline-none focus:underline"
               >
                 Política de Privacidad
-              </Link>{" "}
+              </button>{" "}
               de Cosmo
             </label>
           </div>
@@ -1186,100 +1194,112 @@ export default function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {generalError && (
-        <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-          role="alert"
-        >
-          <span className="block sm:inline">{generalError}</span>
-        </div>
-      )}
-
-      {/* Indicador de progreso */}
-      <div className="flex mb-6">
-        {[1, 2, 3, 4].map((stepNumber) => (
-          <div key={stepNumber} className="flex-1">
-            <div
-              className={`w-full h-2 ${
-                stepNumber <= step
-                  ? "bg-eco-green"
-                  : "bg-soft-grey dark:bg-cosmo-600"
-              } ${stepNumber === 1 ? "rounded-l-full" : ""} ${
-                stepNumber === 4 ? "rounded-r-full" : ""
-              }`}
-            ></div>
-            <div className="text-xs text-center mt-1">
-              {stepNumber === 1 && "Cuenta"}
-              {stepNumber === 2 && "Empresa"}
-              {stepNumber === 3 && "Sostenibilidad"}
-              {stepNumber === 4 && "Verificación"}
-            </div>
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {generalError && (
+          <div
+            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+            role="alert"
+          >
+            <span className="block sm:inline">{generalError}</span>
           </div>
-        ))}
-      </div>
-
-      {/* Contenido del paso actual */}
-      {renderStep()}
-
-      {/* Botones de navegación */}
-      <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 mt-6">
-        {step > 1 && (
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={handleBack}
-            disabled={isLoading}
-          >
-            Atrás
-          </button>
         )}
 
-        {step < 4 ? (
-          <button
-            type="button"
-            className="btn-primary flex-1"
-            onClick={handleNext}
-            disabled={isLoading}
-          >
-            Siguiente
-          </button>
-        ) : (
-          <button
-            type="submit"
-            className="btn-primary flex-1"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Completando registro...
+        {/* Indicador de progreso */}
+        <div className="flex mb-6">
+          {[1, 2, 3, 4].map((stepNumber) => (
+            <div key={stepNumber} className="flex-1">
+              <div
+                className={`w-full h-2 ${
+                  stepNumber <= step
+                    ? "bg-eco-green"
+                    : "bg-soft-grey dark:bg-cosmo-600"
+                } ${stepNumber === 1 ? "rounded-l-full" : ""} ${
+                  stepNumber === 4 ? "rounded-r-full" : ""
+                }`}
+              ></div>
+              <div className="text-xs text-center mt-1">
+                {stepNumber === 1 && "Cuenta"}
+                {stepNumber === 2 && "Empresa"}
+                {stepNumber === 3 && "Sostenibilidad"}
+                {stepNumber === 4 && "Verificación"}
               </div>
-            ) : (
-              "Completar registro"
-            )}
-          </button>
-        )}
-      </div>
-    </form>
+            </div>
+          ))}
+        </div>
+
+        {/* Contenido del paso actual */}
+        {renderStep()}
+
+        {/* Botones de navegación */}
+        <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 mt-6">
+          {step > 1 && (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleBack}
+              disabled={isLoading}
+            >
+              Atrás
+            </button>
+          )}
+
+          {step < 4 ? (
+            <button
+              type="button"
+              className="btn-primary flex-1"
+              onClick={handleNext}
+              disabled={isLoading}
+            >
+              Siguiente
+            </button>
+          ) : (
+            <button
+              type="submit"
+              className="btn-primary flex-1"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Completando registro...
+                </div>
+              ) : (
+                "Completar registro"
+              )}
+            </button>
+          )}
+        </div>
+      </form>
+
+      <TermsModal
+        isOpen={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+      />
+
+      <PrivacyModal
+        isOpen={isPrivacyModalOpen}
+        onClose={() => setIsPrivacyModalOpen(false)}
+      />
+    </>
   );
 }

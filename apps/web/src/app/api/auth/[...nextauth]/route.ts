@@ -4,9 +4,14 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import z from "zod";
 
 // Verificación de la configuración y URL robusta para el API
-// Dentro del contenedor Docker, necesitamos usar el nombre del servicio
-const API_URL = "http://api:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 console.log("URL de la API configurada para autenticación:", API_URL);
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
+console.log(
+  "NEXTAUTH_SECRET:",
+  process.env.NEXTAUTH_SECRET ? "[CONFIGURADO]" : "[NO CONFIGURADO]"
+);
 
 // Esquema de validación para las credenciales
 const credentialsSchema = z.object({
@@ -44,6 +49,9 @@ const authOptions: AuthOptions = {
           console.log(`URL completa para autenticación: ${API_URL}/auth/login`);
 
           // Usamos global.fetch en lugar de importar node-fetch
+          console.log(
+            `Enviando credenciales a ${API_URL}/auth/login: email=${email}, password=${password.substring(0, 1)}***`
+          );
           const response = await fetch(`${API_URL}/auth/login`, {
             method: "POST",
             headers: {
@@ -167,8 +175,7 @@ const authOptions: AuthOptions = {
   // Habilitar debugging solo en desarrollo
   debug: process.env.NODE_ENV === "development",
   // Usar el secreto configurado o uno por defecto
-  secret:
-    process.env.NEXTAUTH_SECRET || "desarrollo_nextauth_secret_key_cosmo_app",
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 // Exportar los handlers de NextAuth

@@ -25,19 +25,19 @@ export const authOptions: NextAuthOptions = {
             `URL de la API: ${process.env.NEXT_PUBLIC_API_URL}/auth/login`
           );
 
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                email: credentials.email,
-                password: credentials.password,
-              }),
-            }
-          );
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
+          console.log(`Usando API URL: ${apiUrl}`);
+
+          const response = await fetch(`${apiUrl}/auth/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
 
           if (!response.ok) {
             const errorText = await response.text();
