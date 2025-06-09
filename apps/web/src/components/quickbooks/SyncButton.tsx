@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 interface SyncButtonProps {
@@ -21,6 +21,7 @@ export default function SyncButton({
   const [error, setError] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
+  const [syncedItemsCount, setSyncedItemsCount] = useState<number>(0);
   const router = useRouter();
 
   const startSync = async (forceSync = false) => {
@@ -34,6 +35,7 @@ export default function SyncButton({
       setError(null);
       setSyncResult(null);
       setCompleted(false);
+      setSyncedItemsCount(0);
 
       console.log("Iniciando sincronización para companyId:", companyId);
 
@@ -101,6 +103,24 @@ export default function SyncButton({
             }
 
             if (!statusData.isRunning && statusData.lastSyncTime) {
+              // Comprobar si hay totalItemsSynced en las estadísticas
+              if (statusData.savedConfig && statusData.savedConfig.syncStats) {
+                const count = statusData.savedConfig.syncStats.totalItemsSynced;
+                setSyncedItemsCount(count);
+
+                // Guardar en sessionStorage para que persista entre páginas
+                if (typeof window !== "undefined") {
+                  sessionStorage.setItem(
+                    "lastQuickBooksSyncTime",
+                    new Date(statusData.lastSyncTime).toISOString()
+                  );
+                  sessionStorage.setItem(
+                    "lastQuickBooksSyncCount",
+                    String(count)
+                  );
+                }
+              }
+
               setSyncResult(
                 `Sincronización completada el ${new Date(statusData.lastSyncTime).toLocaleString()}`
               );
@@ -151,6 +171,7 @@ export default function SyncButton({
           // Redireccionar a la página de gastos después de un breve retraso
           setTimeout(() => {
             router.refresh();
+            router.push("/expenses");
           }, 1500);
         }
       }, 30000);

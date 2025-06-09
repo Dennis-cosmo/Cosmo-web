@@ -8,6 +8,7 @@ import {
 } from "typeorm";
 import { Expense } from "./expense.entity";
 import { Report } from "./report.entity";
+import { SyncLog } from "./sync-log.entity";
 
 export enum CompanySize {
   MICRO = "1-10",
@@ -124,11 +125,26 @@ export class User {
   @Column({ default: false, type: "boolean" })
   onboardingCompleted!: boolean;
 
+  @Column({ nullable: true, type: "varchar" })
+  quickbooksCompanyId?: string;
+
+  @Column({ nullable: true, type: "varchar" })
+  quickbooksAccessToken?: string;
+
+  @Column({ nullable: true, type: "varchar" })
+  quickbooksRefreshToken?: string;
+
+  @Column({ default: true, type: "boolean" })
+  isActive!: boolean;
+
   @OneToMany(() => Expense, (expense) => expense.user)
   expenses!: Expense[];
 
   @OneToMany(() => Report, (report) => report.user)
   reports!: Report[];
+
+  @OneToMany(() => SyncLog, (syncLog) => syncLog.user)
+  syncLogs!: SyncLog[];
 
   @CreateDateColumn({ type: "timestamp" })
   createdAt!: Date;

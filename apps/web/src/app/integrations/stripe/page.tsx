@@ -70,7 +70,7 @@ export default function StripeIntegrationPage() {
         </div>
 
         {/* Integration Details */}
-        <div className="bg-white dark:bg-cosmo-800 shadow rounded-lg mb-8">
+        <div className="bg-black dark:bg-cosmo-800 shadow rounded-lg mb-8">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
               ¿Qué hace esta integración?

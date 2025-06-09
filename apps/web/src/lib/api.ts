@@ -1,4 +1,4 @@
-import { getSession } from "next-auth/react";
+import { getSession, useSession } from "next-auth/react";
 
 // Constantes para configuración de API
 const API_CONFIG = {
@@ -7,7 +7,7 @@ const API_CONFIG = {
   baseUrl:
     typeof window !== "undefined"
       ? "/api" // URL relativa para peticiones desde el navegador
-      : "http://api:4000", // URL para peticiones desde el servidor (dentro del contenedor)
+      : process.env.NEXT_PUBLIC_API_URL || "http://api:4000", // URL para peticiones desde el servidor (dentro del contenedor)
   defaultTimeout: 30000,
   retryCount: 1,
 };
@@ -62,6 +62,16 @@ export async function fetchApi(
   // Obtener la sesión del usuario para extraer el token
   const session = await getSession();
 
+  // Log para debugging
+  if (session?.accessToken) {
+    console.log("Token de acceso encontrado en la sesión");
+  } else {
+    console.warn(
+      "No se encontró token de acceso en la sesión para la petición a:",
+      url
+    );
+  }
+
   // Configurar las opciones de la petición
   const fetchOptions: RequestInit = {
     ...options,
@@ -73,6 +83,19 @@ export async function fetchApi(
       ...options.headers,
     },
   };
+
+  // Log para debugging
+  console.log(
+    "Headers de la petición:",
+    JSON.stringify(
+      {
+        ...fetchOptions.headers,
+        Authorization: session?.accessToken ? "Bearer [TOKEN]" : undefined,
+      },
+      null,
+      2
+    )
+  );
 
   // Configurar timeout para la petición
   const controller = new AbortController();
@@ -121,6 +144,14 @@ export async function fetchApi(
       "Network Error",
       "Error de conexión con el servidor",
       lastError
+    );
+  }
+
+  // Si la respuesta es 401 Unauthorized, intentar refrescar la sesión y reintentar
+  if (response.status === 401) {
+    console.warn("Error 401 Unauthorized en la petición a:", url);
+    console.warn(
+      "La sesión puede haber expirado. Recomendado reiniciar sesión."
     );
   }
 

@@ -3,8 +3,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { dataSource } from "@cosmo/database";
-import { User, Expense, Report } from "@cosmo/database";
+import { User, Expense, Report, SyncLog } from "@cosmo/database";
 import { AppController } from "./app.controller";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
@@ -14,6 +13,10 @@ import { AiModule } from "./ai/ai.module";
 import { TaxonomyModule } from "./taxonomy/taxonomy.module";
 import { LeadsModule } from "./leads/leads.module";
 import { CompanyLead } from "./leads/entities/company-lead.entity";
+import { ScheduleModule } from "@nestjs/schedule";
+import { IntegrationsModule } from "./integrations/integrations.module";
+import { SyncModule } from "./sync/sync.module";
+import * as path from "path";
 
 @Module({
   imports: [
@@ -29,11 +32,9 @@ import { CompanyLead } from "./leads/entities/company-lead.entity";
       useFactory: (configService: ConfigService) => ({
         type: "postgres",
         url: configService.get<string>("DATABASE_URL"),
-        entities: [User, Expense, Report, CompanyLead],
-        migrations: dataSource.options.migrations,
+        entities: [User, Expense, Report, CompanyLead, SyncLog],
+        synchronize: configService.get<string>("NODE_ENV") === "development",
         logging: configService.get<string>("NODE_ENV") === "development",
-        synchronize: true,
-        // synchronize: configService.get<string>("NODE_ENV") === "development",
       }),
     }),
 
@@ -53,6 +54,9 @@ import { CompanyLead } from "./leads/entities/company-lead.entity";
     AiModule,
     TaxonomyModule,
     LeadsModule,
+    ScheduleModule.forRoot(),
+    IntegrationsModule,
+    SyncModule,
   ],
   controllers: [AppController],
   providers: [

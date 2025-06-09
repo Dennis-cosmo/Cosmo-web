@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { get } from "../lib/api";
 
 export interface UserProfile {
@@ -15,7 +15,7 @@ export interface UserProfile {
 }
 
 export function useUserProfile() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,12 +26,59 @@ export function useUserProfile() {
       if (status === "authenticated" && session) {
         try {
           setLoading(true);
+
+          // Verificar que tenemos un token de acceso
+          if (!session.accessToken) {
+            console.error("No hay token de acceso en la sesión");
+            setError(
+              "No hay token de acceso, intente iniciar sesión nuevamente"
+            );
+            setProfile(null);
+            setLoading(false);
+
+            // Opcionalmente cerrar sesión si no hay token
+            // await signOut({ redirect: false });
+            return;
+          }
+
+          console.log(
+            "Obteniendo perfil de usuario con token:",
+            session.accessToken ? "Presente" : "Ausente"
+          );
+
+          // Intentar obtener el perfil
           const userData = await get<UserProfile>("users/dashboard-profile");
-          setProfile(userData);
-          setError(null);
+
+          if (userData) {
+            setProfile(userData);
+            setError(null);
+            console.log(
+              "Perfil de usuario obtenido correctamente:",
+              userData.email
+            );
+          } else {
+            throw new Error("No se pudo obtener el perfil del usuario");
+          }
         } catch (err: any) {
           console.error("Error al obtener el perfil del usuario:", err);
-          setError(err.message || "Error al cargar el perfil");
+
+          // Si el error es 401, el token puede haber expirado
+          if (err.status === 401) {
+            console.warn("Sesión posiblemente expirada (401 Unauthorized)");
+            setError(
+              "La sesión ha expirado, intente iniciar sesión nuevamente"
+            );
+
+            // Intentar actualizar la sesión antes de cerrar
+            try {
+              await update();
+            } catch (updateErr) {
+              console.error("Error al actualizar la sesión:", updateErr);
+            }
+          } else {
+            setError(err.message || "Error al cargar el perfil");
+          }
+
           setProfile(null);
         } finally {
           setLoading(false);
@@ -46,7 +93,7 @@ export function useUserProfile() {
 
     // Llamamos a la función para obtener el perfil
     fetchProfile();
-  }, [session, status]);
+  }, [session, status, update]);
 
   return { profile, loading, error };
 }

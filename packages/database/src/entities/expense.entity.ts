@@ -9,6 +9,8 @@ import {
 } from "typeorm";
 import { User } from "./user.entity";
 
+export type ExpenseStatus = "pending" | "approved" | "rejected" | "archived";
+
 @Entity("expenses")
 export class Expense {
   @PrimaryGeneratedColumn("uuid")
@@ -27,7 +29,7 @@ export class Expense {
   category?: string;
 
   @Column({ default: "pending", type: "varchar" })
-  status!: "pending" | "approved" | "rejected";
+  status!: ExpenseStatus;
 
   @Column({ default: false, type: "boolean" })
   isGreen!: boolean;

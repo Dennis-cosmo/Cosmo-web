@@ -5,6 +5,9 @@ import path from "path";
 // Entidades
 export * from "./entities";
 
+// Módulo de base de datos
+export * from "./database.module";
+
 // Configuración de conexión a base de datos
 export const getDataSource = () => {
   const dataSource = new DataSource({

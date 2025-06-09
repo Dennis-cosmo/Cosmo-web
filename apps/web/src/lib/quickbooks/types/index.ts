@@ -33,11 +33,14 @@ export interface QuickBooksExpense {
   amount: number;
   currency: string;
   category?: string;
+  vendor?: string;
   supplier?: string;
   notes?: string;
   paymentMethod?: string;
   sourceId: string;
   sourceSystem: "quickbooks";
+  companyId?: string;
+  metadata?: Record<string, any>;
   rawData?: any;
 }
 

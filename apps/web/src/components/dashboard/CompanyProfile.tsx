@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useUserProfile } from "../../hooks/useUserProfile";
 
 interface CompanyProfileData {
   id: string;
@@ -79,66 +80,110 @@ const budgetRangeNames: Record<string, string> = {
   over_100000: "Más de €100.000",
 };
 
-export default function CompanyProfile() {
+export function CompanyProfile() {
   const { data: session } = useSession();
-  const [profileData, setProfileData] = useState<CompanyProfileData | null>(
-    null
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { profile, loading, error } = useUserProfile();
+  const [activitiesError, setActivitiesError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Estado para almacenar las actividades
+  const [activities, setActivities] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchProfileData = async () => {
-      if (!session?.accessToken) return;
+    // Función para cargar las actividades desde la API
+    const loadActivities = async () => {
+      // Si no hay perfil o hay un error, no intentamos cargar las actividades
+      if (!profile || error) {
+        if (error) {
+          setActivitiesError("No se pueden cargar las actividades: " + error);
+        }
+        return;
+      }
 
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/profile`,
-          {
-            headers: {
-              Authorization: `Bearer ${session.accessToken}`,
+        // Verificar si tenemos actividades en el perfil
+        if (
+          profile.taxonomyActivities &&
+          profile.taxonomyActivities.length > 0
+        ) {
+          setActivities(profile.taxonomyActivities);
+          setActivitiesError(null);
+          console.log(
+            "Actividades cargadas del perfil:",
+            profile.taxonomyActivities.length
+          );
+        } else if (
+          profile.euTaxonomyActivities &&
+          profile.euTaxonomyActivities.length > 0
+        ) {
+          // Usar actividades directamente de euTaxonomyActivities si están disponibles
+          setActivities(profile.euTaxonomyActivities);
+          setActivitiesError(null);
+          console.log(
+            "Actividades cargadas de euTaxonomyActivities:",
+            profile.euTaxonomyActivities.length
+          );
+        } else {
+          // Si no hay actividades en el perfil, podríamos intentar cargarlas de otra fuente
+          // o usar datos de ejemplo
+          setActivitiesError(
+            "No se encontraron actividades económicas para esta empresa."
+          );
+          console.warn(
+            "No se encontraron actividades en el perfil del usuario"
+          );
+
+          // Usar datos de ejemplo si no hay actividades reales
+          setActivities([
+            {
+              id: 1,
+              name: "Ejemplo: Manufactura de equipos eléctricos (C26)",
+              sectorName: "Manufactura",
+              naceCodes: ["C26"],
+              criteria: ["Cambio Climático", "Agua", "Contaminación"],
             },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Error al obtener datos del perfil");
+          ]);
         }
-
-        const data = await response.json();
-        setProfileData(data);
       } catch (err) {
-        console.error("Error fetching profile:", err);
-        setError("No se pudieron cargar los datos del perfil");
-      } finally {
-        setIsLoading(false);
+        console.error("Error al procesar las actividades económicas:", err);
+        setActivitiesError("Error al cargar las actividades económicas");
       }
     };
 
-    fetchProfileData();
-  }, [session]);
+    loadActivities();
+  }, [profile, error, retryCount]);
 
-  if (isLoading) {
+  // Función para reintentar la carga de datos
+  const handleRetry = () => {
+    setRetryCount((prev) => prev + 1);
+    setActivitiesError(null);
+  };
+
+  if (loading) {
     return (
-      <div className="animate-pulse">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 mb-2"></div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6 mb-2"></div>
+      <div className="p-4 border border-white/10 rounded-lg animate-pulse">
+        Cargando perfil de la empresa...
       </div>
     );
   }
 
-  if (error) {
+  if (error && !profile) {
     return (
-      <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg">
-        {error}
+      <div className="p-4 border border-red-500/30 rounded-lg bg-red-950/20">
+        <h3 className="text-red-400 mb-2">Error al cargar el perfil</h3>
+        <p className="text-sm text-white/70">{error}</p>
+        <button
+          onClick={handleRetry}
+          className="mt-3 px-3 py-1 bg-red-800/30 hover:bg-red-800/50 text-white rounded text-sm"
+        >
+          Reintentar
+        </button>
       </div>
     );
   }
 
   // Datos de fallback si la API aún no está implementada
-  const displayData = profileData || {
+  const displayData = profile || {
     id: session?.user?.id || "",
     email: session?.user?.email || "",
     firstName: session?.user?.firstName || "",
@@ -158,6 +203,29 @@ export default function CompanyProfile() {
     sustainabilityNotes: "Notas pendientes",
     createdAt: new Date().toISOString(),
   };
+
+  // Mostrar mensaje de error para actividades si es necesario
+  if (activitiesError) {
+    return (
+      <div className="p-4 border border-amber-500/30 rounded-lg bg-amber-950/20">
+        <h3 className="text-xl font-medium mb-4">
+          {profile?.companyName || "Su Empresa"}
+        </h3>
+        <div className="mt-4">
+          <h4 className="text-amber-400 mb-2">
+            Aviso sobre actividades económicas
+          </h4>
+          <p className="text-sm text-white/70">{activitiesError}</p>
+          <button
+            onClick={handleRetry}
+            className="mt-3 px-3 py-1 bg-amber-800/30 hover:bg-amber-800/50 text-white rounded text-sm"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
