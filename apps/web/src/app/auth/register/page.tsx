@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import RegisterForm from "../../../components/auth/RegisterForm";
+import IconPrincipal from "@/components/logos/IconPrincipal";
+import LogoPrincipal from "@/components/logos/LogoPrincipal";
 
 export const metadata: Metadata = {
   title: "Registro | Cosmo",
@@ -12,10 +14,8 @@ export default function RegisterPage() {
       <div className="w-full max-w-full md:max-w-4xl lg:max-w-6xl">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-eco-green flex items-center justify-center mr-2">
-              <span className="font-bold text-pure-white text-xl">C</span>
-            </div>
-            <span className="font-bold text-2xl text-gray-800">Cosmo</span>
+            <IconPrincipal width={48} height={48} />
+            <LogoPrincipal width={120} height={30} className="ml-2" />
           </div>
           <h1 className="text-3xl font-bold mt-4 mb-2 text-gray-800">
             Crea tu cuenta

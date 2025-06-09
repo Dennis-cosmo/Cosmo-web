@@ -196,15 +196,12 @@ export default function SustainabilityAnalysisClient() {
   // Si se muestra en modo inline, retornar un div con el contenido
   if (displayMode === "inline") {
     return (
-      <div className="mb-8 bg-white dark:bg-cosmo-800 rounded-lg shadow-xl overflow-hidden">
-        <div className="px-6 py-4 bg-gray-50 dark:bg-cosmo-700 border-b border-gray-200 dark:border-cosmo-600">
+      <div className="mb-8 bg-black dark:bg-cosmo-800 rounded-lg shadow-xl overflow-hidden">
+        <div className="px-6 py-4 bg-black dark:bg-cosmo-700 border-b border-gray-200 dark:border-cosmo-600">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              Análisis de Sostenibilidad
-            </h2>
             {/* Quitar el botón de cerrar para la vista inline */}
             <div className="flex space-x-2">
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-white dark:text-gray-400">
                 {sessionStorage.getItem("lastSustainabilityAnalysisDate")
                   ? `Último análisis: ${new Date(sessionStorage.getItem("lastSustainabilityAnalysisDate") || "").toLocaleString()}`
                   : ""}

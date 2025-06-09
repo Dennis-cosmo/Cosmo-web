@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import LogoPrincipal from "@/components/logos/LogoPrincipal";
 
 export default function Home() {
   // Estado para feedback del formulario
@@ -46,9 +47,13 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-eco-green/40 via-lime-accent/20 to-transparent animate-pulse"></div>
         <div className="container mx-auto px-4 relative z-10 pt-32 pb-20">
           <div className="max-w-4xl mx-auto text-center mb-16">
-            <h1 className="text-8xl font-normal tracking-tight text-[#c5ff00] drop-shadow-[0_0_30px_rgba(197,255,0,0.6)] mb-6 opacity-0 animate-[fadeIn_1s_ease-out_forwards] transform transition-all duration-700 hover:scale-105 flex items-center justify-center">
-              Cosmo
-            </h1>
+            <div className="mb-6 opacity-0 animate-[fadeIn_1s_ease-out_forwards] transform transition-all duration-700 hover:scale-105 flex items-center justify-center">
+              <LogoPrincipal
+                width={400}
+                height={90}
+                className="drop-shadow-[0_0_30px_rgba(197,255,0,0.6)]"
+              />
+            </div>
             <h2 className="text-5xl font-bold leading-tight mb-8 opacity-0 animate-[fadeIn_1s_ease-out_0.5s_forwards]">
               <span className="text-white">Transforming</span>{" "}
               <span className="text-lime-accent bg-clip-text text-transparent bg-gradient-to-r from-lime-accent to-eco-green">

@@ -14,6 +14,8 @@ import {
 } from "recharts";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import { useSession } from "next-auth/react";
+import LogoPrincipal from "@/components/logos/LogoPrincipal";
+import IconPrincipal from "@/components/logos/IconPrincipal";
 
 // Datos estáticos para los gráficos (mantener como respaldo)
 const staticData = {
@@ -188,50 +190,14 @@ export default function Dashboard() {
       <header className="w-full py-8 px-6 border-b border-white/10 bg-black">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <h1 className="text-3xl font-normal tracking-tight text-[#c5ff00] drop-shadow-[0_0_15px_rgba(197,255,0,0.5)] flex items-center">
-              Cosmo
-              <svg
-                className="h-8 w-8 ml-1"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {/* Triángulo de fondo */}
-                <path
-                  d="M5 4L20 12L5 20L5 4Z"
-                  stroke="#c5ff00"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-
-                {/* Línea diagonal cruzando el triángulo */}
-                <line
-                  x1="5"
-                  y1="20"
-                  x2="20"
-                  y2="4"
-                  stroke="#c5ff00"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                />
-
-                {/* Círculo pequeño a la izquierda */}
-                <circle cx="3" cy="12" r="1.5" fill="#c5ff00" />
-
-                {/* Línea vertical que baja del círculo siguiendo el vértice */}
-                <line
-                  x1="3"
-                  y1="12"
-                  x2="5"
-                  y2="20"
-                  stroke="#c5ff00"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </h1>
+            <div className="flex items-center">
+              <LogoPrincipal
+                width={120}
+                height={30}
+                className="text-[#c5ff00] drop-shadow-[0_0_15px_rgba(197,255,0,0.5)]"
+              />
+              <IconPrincipal width={32} height={32} className="ml-2" />
+            </div>
             <span className="text-2xl font-semibold tracking-tight">
               {companyInfo.companyName}
             </span>

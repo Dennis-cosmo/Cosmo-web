@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import React from "react";
+import LogoPrincipal from "./logos/LogoPrincipal";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -91,9 +92,10 @@ export default function Header() {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center">
-              <h1 className="text-3xl font-normal tracking-tight text-eco-green drop-shadow-[0_0_15px_rgba(197,255,0,0.5)] transform transition-transform duration-300 hover:scale-110 flex items-center">
-                Cosmo
-              </h1>
+              <LogoPrincipal
+                className="h-8 w-auto transform transition-transform duration-300 hover:scale-110"
+                height={32}
+              />
             </Link>
           </div>
 
@@ -129,6 +131,20 @@ export default function Header() {
                     }`}
                 >
                   Dashboard
+                </Link>
+                <Link
+                  href="/investors"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 
+                    relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 
+                    after:bg-eco-green after:transform after:scale-x-0 after:origin-left 
+                    after:transition-transform after:duration-300 hover:after:scale-x-100
+                    hover:bg-eco-green/10 hover:drop-shadow-[0_0_8px_rgba(163,230,53,0.3)] ${
+                      isActive("/investors")
+                        ? "text-eco-green after:scale-x-100 bg-eco-green/5"
+                        : "text-white/90 hover:text-eco-green"
+                    }`}
+                >
+                  Investors
                 </Link>
                 <Link
                   href="/expenses"
@@ -326,6 +342,16 @@ export default function Header() {
                   }`}
                 >
                   Dashboard
+                </Link>
+                <Link
+                  href="/investors"
+                  className={`block px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    isActive("/investors")
+                      ? "text-eco-green"
+                      : "text-white/90 hover:text-eco-green hover:bg-cosmo-300"
+                  }`}
+                >
+                  Investors
                 </Link>
                 <Link
                   href="/expenses"

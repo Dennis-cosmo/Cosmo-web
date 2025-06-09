@@ -116,17 +116,17 @@ export default function SustainabilityAnalysisResults({
   };
 
   return (
-    <div className="bg-white dark:bg-cosmo-800 shadow-lg rounded-lg overflow-hidden">
+    <div className="bg-[#1A1A1A] shadow-lg rounded-lg overflow-hidden border border-[#3E9D0A]/20">
       {/* Encabezado con resumen */}
-      <div className="px-6 py-4 bg-gray-50 dark:bg-cosmo-700 border-b border-gray-200 dark:border-cosmo-600">
+      <div className="px-6 py-4 bg-black/30 border-b border-[#3E9D0A]/20">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-xl font-bold text-[#E1E1E1]">
             Análisis de Sostenibilidad
           </h2>
           {!isInline && (
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"
+              className="text-[#E1E1E1]/60 hover:text-[#E1E1E1] transition-colors"
               aria-label="Cerrar"
             >
               <svg
@@ -150,42 +150,38 @@ export default function SustainabilityAnalysisResults({
 
       {/* Estadísticas resumidas */}
       <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg shadow-sm">
-          <h3 className="text-sm font-medium text-green-800 dark:text-green-200">
-            OpEx
-          </h3>
-          <p className="text-2xl font-bold text-green-700 dark:text-green-300 mt-1">
+        <div className="bg-[#3E9D0A]/10 p-4 rounded-lg border border-[#3E9D0A]/20">
+          <h3 className="text-sm font-medium text-[#C6FF00]">OpEx</h3>
+          <p className="text-2xl font-bold text-[#3E9D0A] mt-1">
             {formatCurrency(result.sustainableTotal)}
           </p>
-          <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+          <p className="text-sm text-[#E1E1E1] mt-1">
             {result.sustainableExpenses.length} elementos (
             {result.sustainablePercentage.toFixed(1)}%)
           </p>
         </div>
 
-        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg shadow-sm">
-          <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-            OpEx
-          </h3>
-          <p className="text-2xl font-bold text-red-700 dark:text-red-300 mt-1">
+        <div className="bg-[#3E9D0A]/5 p-4 rounded-lg border border-[#3E9D0A]/20">
+          <h3 className="text-sm font-medium text-[#C6FF00]">OpEx</h3>
+          <p className="text-2xl font-bold text-[#3E9D0A] mt-1">
             {formatCurrency(result.nonSustainableTotal)}
           </p>
-          <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+          <p className="text-sm text-[#E1E1E1] mt-1">
             {result.nonSustainableExpenses.length} elementos (
             {(100 - result.sustainablePercentage).toFixed(1)}%)
           </p>
         </div>
 
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg shadow-sm">
-          <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+        <div className="bg-[#3E9D0A]/10 p-4 rounded-lg border border-[#3E9D0A]/20">
+          <h3 className="text-sm font-medium text-[#C6FF00]">
             Total Analizado
           </h3>
-          <p className="text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1">
+          <p className="text-2xl font-bold text-[#3E9D0A] mt-1">
             {formatCurrency(
               result.sustainableTotal + result.nonSustainableTotal
             )}
           </p>
-          <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+          <p className="text-sm text-[#E1E1E1] mt-1">
             {result.sustainableExpenses.length +
               result.nonSustainableExpenses.length}{" "}
             elementos
@@ -194,14 +190,14 @@ export default function SustainabilityAnalysisResults({
       </div>
 
       {/* Pestañas para navegar entre resultados */}
-      <div className="px-6 border-b border-gray-200 dark:border-cosmo-600">
+      <div className="px-6 border-b border-[#3E9D0A]/20">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab("sustainable")}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === "sustainable"
-                ? "border-eco-green text-eco-green dark:border-eco-green dark:text-eco-green"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                ? "border-[#C6FF00] text-[#C6FF00]"
+                : "border-transparent text-[#E1E1E1]/60 hover:text-[#E1E1E1] hover:border-[#3E9D0A]/40"
             }`}
           >
             Sostenibles ({result.sustainableExpenses.length})
@@ -210,8 +206,8 @@ export default function SustainabilityAnalysisResults({
             onClick={() => setActiveTab("nonSustainable")}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === "nonSustainable"
-                ? "border-red-500 text-red-500 dark:border-red-400 dark:text-red-400"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                ? "border-[#C6FF00] text-[#C6FF00]"
+                : "border-transparent text-[#E1E1E1]/60 hover:text-[#E1E1E1] hover:border-[#3E9D0A]/40"
             }`}
           >
             No Sostenibles ({result.nonSustainableExpenses.length})
@@ -220,8 +216,8 @@ export default function SustainabilityAnalysisResults({
             onClick={() => setActiveTab("recommendations")}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === "recommendations"
-                ? "border-blue-500 text-blue-500 dark:border-blue-400 dark:text-blue-400"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                ? "border-[#C6FF00] text-[#C6FF00]"
+                : "border-transparent text-[#E1E1E1]/60 hover:text-[#E1E1E1] hover:border-[#3E9D0A]/40"
             }`}
           >
             Recomendaciones
@@ -233,86 +229,80 @@ export default function SustainabilityAnalysisResults({
       <div className="p-6">
         {activeTab === "sustainable" && (
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              OpEx
-            </h3>
+            <h3 className="text-lg font-medium text-[#E1E1E1] mb-2">OpEx</h3>
             {result.sustainableExpenses.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-[#E1E1E1]/60">
                 No se encontraron gastos sostenibles.
               </p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-cosmo-600">
-                  <thead className="bg-gray-50 dark:bg-cosmo-700">
+                <table className="min-w-full divide-y divide-[#3E9D0A]/20">
+                  <thead className="bg-black/30">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Descripción
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Fecha
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Categoría
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Monto
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Proveedor
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Razón
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Alternativa
                       </th>
                       {extraSust.map((key) => (
                         <th
                           key={key}
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                          className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider"
                         >
                           {key}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-cosmo-800 divide-y divide-gray-200 dark:divide-cosmo-700">
+                  <tbody className="divide-y divide-[#3E9D0A]/20">
                     {result.sustainableExpenses.map((expense, index) => {
                       const normalizedExpense = normalizeExpense(expense);
                       return (
                         <tr
                           key={index}
-                          className={
-                            index % 2 === 0
-                              ? "bg-gray-50 dark:bg-cosmo-700/30"
-                              : ""
-                          }
+                          className={index % 2 === 0 ? "bg-[#3E9D0A]/5" : ""}
                         >
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.description)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.date)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.category)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.amount)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.supplier)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.reason)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.alternative)}
                           </td>
                           {extraSust.map((key) => (
                             <td
                               key={key}
-                              className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300"
+                              className="px-6 py-4 text-sm text-[#E1E1E1]"
                             >
                               {safe(normalizedExpense[key])}
                             </td>
@@ -329,86 +319,80 @@ export default function SustainabilityAnalysisResults({
 
         {activeTab === "nonSustainable" && (
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              OpEx
-            </h3>
+            <h3 className="text-lg font-medium text-[#E1E1E1] mb-2">OpEx</h3>
             {result.nonSustainableExpenses.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-[#E1E1E1]/60">
                 No se encontraron gastos no sostenibles.
               </p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-cosmo-600">
-                  <thead className="bg-gray-50 dark:bg-cosmo-700">
+                <table className="min-w-full divide-y divide-[#3E9D0A]/20">
+                  <thead className="bg-black/30">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Descripción
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Fecha
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Categoría
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Monto
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Proveedor
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Razón
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider">
                         Alternativa
                       </th>
                       {extraNonSust.map((key) => (
                         <th
                           key={key}
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                          className="px-6 py-3 text-left text-xs font-medium text-[#E1E1E1]/60 uppercase tracking-wider"
                         >
                           {key}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-cosmo-800 divide-y divide-gray-200 dark:divide-cosmo-700">
+                  <tbody className="divide-y divide-[#3E9D0A]/20">
                     {result.nonSustainableExpenses.map((expense, index) => {
                       const normalizedExpense = normalizeExpense(expense);
                       return (
                         <tr
                           key={index}
-                          className={
-                            index % 2 === 0
-                              ? "bg-gray-50 dark:bg-cosmo-700/30"
-                              : ""
-                          }
+                          className={index % 2 === 0 ? "bg-[#3E9D0A]/5" : ""}
                         >
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.description)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.date)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.category)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.amount)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.supplier)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.reason)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          <td className="px-6 py-4 text-sm text-[#E1E1E1]">
                             {safe(normalizedExpense.alternative)}
                           </td>
                           {extraNonSust.map((key) => (
                             <td
                               key={key}
-                              className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300"
+                              className="px-6 py-4 text-sm text-[#E1E1E1]"
                             >
                               {safe(normalizedExpense[key])}
                             </td>
@@ -425,19 +409,19 @@ export default function SustainabilityAnalysisResults({
 
         {activeTab === "recommendations" && (
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-medium text-[#E1E1E1] mb-2">
               Recomendaciones para mejorar
             </h3>
             <ul className="space-y-3">
               {result.recommendations.map((recommendation, index) => (
                 <li
                   key={index}
-                  className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg"
+                  className="bg-[#3E9D0A]/10 p-4 rounded-lg border border-[#3E9D0A]/20"
                 >
                   <div className="flex items-start">
                     <div className="flex-shrink-0">
                       <svg
-                        className="h-5 w-5 text-blue-600 dark:text-blue-400"
+                        className="h-5 w-5 text-[#C6FF00]"
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 20 20"
                         fill="currentColor"
@@ -450,9 +434,7 @@ export default function SustainabilityAnalysisResults({
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm text-blue-800 dark:text-blue-200">
-                        {recommendation}
-                      </p>
+                      <p className="text-sm text-[#E1E1E1]">{recommendation}</p>
                     </div>
                   </div>
                 </li>
@@ -463,7 +445,7 @@ export default function SustainabilityAnalysisResults({
       </div>
 
       {/* Pie con información del modelo */}
-      <div className="px-6 py-4 bg-gray-50 dark:bg-cosmo-700 border-t border-gray-200 dark:border-cosmo-600 text-xs text-gray-500 dark:text-gray-400">
+      <div className="px-6 py-4 bg-black/30 border-t border-[#3E9D0A]/20 text-xs text-[#E1E1E1]/60">
         <p>Análisis generado por modelo: {result.model || "N/A"}</p>
         <p>
           Tokens utilizados: {result.usage?.totalTokens ?? "N/A"} (
@@ -474,10 +456,12 @@ export default function SustainabilityAnalysisResults({
       </div>
 
       {!isInline && (
-        <div className="px-6 py-4 bg-gray-50 dark:bg-cosmo-700 border-t border-gray-200 dark:border-cosmo-600 flex justify-end">
+        <div className="px-6 py-4 bg-black/30 border-t border-[#3E9D0A]/20 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-white dark:bg-cosmo-800 border border-gray-300 dark:border-cosmo-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-cosmo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-eco-green"
+            className="px-4 py-2 bg-[#1A1A1A] border border-[#3E9D0A]/20 rounded-md shadow-sm text-sm font-medium 
+                     text-[#E1E1E1] hover:bg-[#3E9D0A]/10 hover:border-[#3E9D0A]/40 
+                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3E9D0A]"
           >
             Cerrar
           </button>

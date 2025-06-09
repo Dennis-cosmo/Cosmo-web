@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Metadata } from "next";
+import IconPrincipal from "@/components/logos/IconPrincipal";
+import LogoPrincipal from "@/components/logos/LogoPrincipal";
 
 export const metadata: Metadata = {
   title: "Registro exitoso | Cosmo",
@@ -12,12 +14,8 @@ export default function RegisterSuccessPage() {
       <div className="w-full max-w-md text-center">
         <div className="mb-8">
           <div className="inline-flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-eco-green flex items-center justify-center mr-2">
-              <span className="font-bold text-pure-white text-xl">C</span>
-            </div>
-            <span className="font-bold text-2xl text-charcoal dark:text-pure-white">
-              Cosmo
-            </span>
+            <IconPrincipal width={48} height={48} />
+            <LogoPrincipal width={120} height={30} className="ml-2" />
           </div>
         </div>
 

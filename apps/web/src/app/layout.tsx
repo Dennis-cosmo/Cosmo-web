@@ -3,6 +3,8 @@ import { Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import Header from "../components/Header";
 import { AuthProvider } from "../providers/AuthProvider";
+import IconPrincipal from "@/components/logos/IconPrincipal";
+import LogoPrincipal from "@/components/logos/LogoPrincipal";
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
@@ -35,10 +37,16 @@ export default function RootLayout({
               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 rounded-full bg-eco-green flex items-center justify-center">
-                      <span className="font-bold text-cosmo-500">C</span>
-                    </div>
-                    <span className="font-bold text-xl">Cosmo</span>
+                    <IconPrincipal
+                      width={32}
+                      height={32}
+                      className="text-eco-green"
+                    />
+                    <LogoPrincipal
+                      width={100}
+                      height={24}
+                      className="text-white"
+                    />
                   </div>
                   <p className="text-white/80">
                     Automating sustainable finance for companies committed to
