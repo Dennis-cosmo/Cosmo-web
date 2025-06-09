@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
 
-// Datos estáticos de sectores (fallback para cuando la API externa no está disponible)
-const fallbackSectors = [
+// Datos estáticos de respaldo
+const staticSectors = [
   { id: 21, name: "Construcción y actividades inmobiliarias" },
   { id: 4, name: "Energía" },
   { id: 2, name: "Protección y restauración medioambiental" },
@@ -16,23 +16,46 @@ const fallbackSectors = [
 
 export async function GET() {
   try {
-    // Llamar al endpoint de sectores desde el servidor (sin problemas CORS)
-    const response = await axios.get(
-      "https://webgate.ec.europa.eu/sft/api/v1/en/sectors/objective/41"
-    );
+    console.log("Obteniendo sectores de taxonomía desde nuestra API");
 
-    // Formatear los sectores para garantizar que tengan el formato esperado
-    const formattedSectors = response.data.map((sector: any) => ({
-      id: sector.id,
-      name: sector.name, // Puedes traducir aquí los nombres si lo deseas
-      originalName: sector.name,
-    }));
+    // En Docker, usamos la variable API_INTERNAL_URL para contenedor api en entornos Docker
+    const apiUrl = process.env.API_INTERNAL_URL || "http://localhost:4000";
+    console.log("API URL para sectores:", apiUrl);
 
-    // Devolver los datos al frontend
-    return NextResponse.json(formattedSectors);
+    try {
+      // Obtener sectores desde nuestra API
+      const sectorsResponse = await axios.get(`${apiUrl}/taxonomy/sectors`, {
+        timeout: 5000,
+      });
+
+      // Verificar que la respuesta sea un array
+      if (Array.isArray(sectorsResponse.data)) {
+        console.log(
+          `Sectores obtenidos del backend: ${sectorsResponse.data.length}`
+        );
+
+        // Devolver los datos al frontend
+        return NextResponse.json(sectorsResponse.data);
+      } else {
+        console.error("Respuesta de API no es un array:", sectorsResponse.data);
+        throw new Error("Formato de respuesta inválido");
+      }
+    } catch (apiError: any) {
+      console.error(
+        `Error específico al conectar con API (${apiUrl}):`,
+        apiError.message
+      );
+      if (apiError.code === "ECONNREFUSED") {
+        console.error(
+          "No se pudo conectar al backend. Usando datos de respaldo."
+        );
+      }
+      // Si falla, usamos datos estáticos de respaldo
+      return NextResponse.json(staticSectors);
+    }
   } catch (error) {
-    console.error("Error al obtener sectores de taxonomía:", error);
-    // Si falla, usar datos de respaldo
-    return NextResponse.json(fallbackSectors);
+    console.error("Error general al obtener sectores de taxonomía:", error);
+    // Si falla en cualquier punto, usamos datos de respaldo
+    return NextResponse.json(staticSectors);
   }
 }

@@ -11,7 +11,9 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "test": "jest",
-    "clean": "rm -rf dist && rm -rf node_modules"
+    "clean": "rm -rf dist && rm -rf node_modules",
+    "taxonomy:populate": "ts-node -r tsconfig-paths/register src/taxonomy/scripts/populate-taxonomy.ts",
+    "taxonomy:sync": "curl -X POST http://localhost:3001/taxonomy/sync"
   },
   "dependencies": {
     "@cosmo/database": "*",

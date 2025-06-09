@@ -3,8 +3,13 @@ import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import z from "zod";
 
-// Verificación de la configuración y URL robusta para el API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+// En el servidor (para NextAuth) usamos la URL interna cuando está disponible
+const API_URL =
+  process.env.API_INTERNAL_URL ||
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:4000" // Usar localhost para acceso desde navegador
+    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000");
+
 console.log("URL de la API configurada para autenticación:", API_URL);
 console.log("NODE_ENV:", process.env.NODE_ENV);
 console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);

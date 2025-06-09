@@ -16,6 +16,8 @@ import { CompanyLead } from "./leads/entities/company-lead.entity";
 import { ScheduleModule } from "@nestjs/schedule";
 import { IntegrationsModule } from "./integrations/integrations.module";
 import { SyncModule } from "./sync/sync.module";
+import { TaxonomySector } from "./taxonomy/entities/taxonomy-sector.entity";
+import { TaxonomyActivity } from "./taxonomy/entities/taxonomy-activity.entity";
 import * as path from "path";
 
 @Module({
@@ -32,7 +34,15 @@ import * as path from "path";
       useFactory: (configService: ConfigService) => ({
         type: "postgres",
         url: configService.get<string>("DATABASE_URL"),
-        entities: [User, Expense, Report, CompanyLead, SyncLog],
+        entities: [
+          User,
+          Expense,
+          Report,
+          CompanyLead,
+          SyncLog,
+          TaxonomySector,
+          TaxonomyActivity,
+        ],
         synchronize: configService.get<string>("NODE_ENV") === "development",
         logging: configService.get<string>("NODE_ENV") === "development",
       }),

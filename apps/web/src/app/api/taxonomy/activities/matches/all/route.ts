@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
 
-// Datos de fallback para cuando la API falla
-const fallbackActivities = [
+// Datos estáticos de respaldo
+const staticActivities = [
   // Energía
   {
     id: 401,
     name: "Generación de electricidad mediante tecnología solar fotovoltaica",
     sectorId: 4,
+    sectorName: "Energía",
     naceCodes: ["D35.11"],
   },
   {
     id: 402,
     name: "Generación de electricidad mediante tecnología solar concentrada",
     sectorId: 4,
+    sectorName: "Energía",
     naceCodes: ["D35.11"],
   },
   // Manufactura
@@ -21,80 +23,80 @@ const fallbackActivities = [
     id: 301,
     name: "Fabricación de tecnologías bajas en carbono",
     sectorId: 3,
+    sectorName: "Manufactura",
     naceCodes: ["C25", "C27", "C28"],
-  },
-  {
-    id: 302,
-    name: "Fabricación de cemento",
-    sectorId: 3,
-    naceCodes: ["C23.51"],
   },
   // Transporte
   {
     id: 601,
     name: "Transporte por ferrocarril de pasajeros",
     sectorId: 6,
+    sectorName: "Transporte",
     naceCodes: ["H49.10"],
-  },
-  {
-    id: 602,
-    name: "Transporte por ferrocarril de mercancías",
-    sectorId: 6,
-    naceCodes: ["H49.20"],
   },
 ];
 
 export async function GET() {
   try {
-    // Luego obtenemos todas las actividades
-    const activitiesResponse = await axios.get(
-      "https://webgate.ec.europa.eu/sft/api/v1/en/activities/matches/all"
-    );
+    console.log("Obteniendo actividades de taxonomía desde nuestra API");
 
-    // Procesamos las actividades para adaptarlas a nuestra estructura interna
-    const processedActivities = activitiesResponse.data.map((item: any) => {
-      // La estructura real tiene activity anidado
-      const activityData = item.activity || {};
-      const sectorData = activityData.sector || {};
+    // Obtener actividades desde nuestra API
+    // En Docker, usamos la variable API_INTERNAL_URL para contenedor api en entornos Docker
+    const apiUrl = process.env.API_INTERNAL_URL || "http://localhost:4000";
+    console.log("API URL para actividades:", apiUrl);
 
-      // Extraer los códigos NACE si existen
-      let naceCodes: string[] = [];
+    try {
+      const activitiesResponse = await axios.get(
+        `${apiUrl}/taxonomy/activities/all`,
+        { timeout: 8000 }
+      );
 
-      // Intentar extraer códigos NACE de diferentes posibles ubicaciones
-      if (item.naceCodes && Array.isArray(item.naceCodes)) {
-        naceCodes = item.naceCodes;
-      } else if (
-        activityData.naceCodes &&
-        Array.isArray(activityData.naceCodes)
-      ) {
-        naceCodes = activityData.naceCodes;
-      } else if (item.nace && Array.isArray(item.nace)) {
-        naceCodes = item.nace.map((n: any) => n.code);
-      } else if (activityData.nace && Array.isArray(activityData.nace)) {
-        naceCodes = activityData.nace.map((n: any) => n.code);
+      // Verificar que la respuesta sea un array
+      if (Array.isArray(activitiesResponse.data)) {
+        console.log(
+          `Actividades obtenidas del backend: ${activitiesResponse.data.length}`
+        );
+
+        // Procesar las actividades para asegurar formato consistente
+        const processedActivities = activitiesResponse.data.map((item: any) => {
+          // Extraer datos del sector
+          const sectorData = item.sector || {};
+
+          return {
+            id: item.id,
+            name: item.name || "Actividad sin nombre",
+            sectorId: item.sectorId || sectorData.id || 0,
+            sectorName: sectorData.name || "Sector desconocido",
+            naceCodes: item.naceCodes || [],
+            description: item.description || "",
+          };
+        });
+
+        // Devolver los datos procesados al frontend
+        return NextResponse.json(processedActivities);
+      } else {
+        console.error(
+          "Respuesta de API no es un array:",
+          activitiesResponse.data
+        );
+        throw new Error("Formato de respuesta inválido");
       }
-
-      return {
-        // Usamos el ID de la actividad principal o del item
-        id: activityData.id || item.id,
-        // Nombre de la actividad
-        name: activityData.name || item.name || "Actividad sin nombre",
-        // ID del sector al que pertenece
-        sectorId: sectorData.id || 0,
-        // Nombre del sector
-        sectorName: sectorData.name || "Sector desconocido",
-        // Códigos NACE
-        naceCodes: naceCodes,
-        // Descripción
-        description: item.activityDescription || activityData.description || "",
-      };
-    });
-
-    // Devolver los datos procesados al frontend
-    return NextResponse.json(processedActivities);
+    } catch (apiError: any) {
+      console.error(
+        `Error específico al conectar con API (${apiUrl}):`,
+        apiError.message
+      );
+      if (apiError.code === "ECONNREFUSED") {
+        console.error(
+          "No se pudo conectar al backend. Usando datos de respaldo."
+        );
+      }
+      // Si falla, usamos datos de respaldo
+      return NextResponse.json(staticActivities);
+    }
   } catch (error) {
-    console.error("Error al obtener actividades de taxonomía:", error);
+    console.error("Error general al obtener actividades de taxonomía:", error);
     // Si falla, usamos datos de respaldo
-    return NextResponse.json(fallbackActivities);
+    return NextResponse.json(staticActivities);
   }
 }

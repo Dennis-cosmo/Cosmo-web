@@ -5,6 +5,7 @@ import { ValidationPipe } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
 import { getMetadataArgsStorage } from "typeorm";
+import { TaxonomyService } from "./taxonomy/taxonomy.service";
 
 async function bootstrap() {
   // Verificar metadatos de entidades
@@ -44,6 +45,26 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api", app, document);
+
+  // Sincronizar datos de taxonomía si es necesario
+  try {
+    const taxonomyService = app.get(TaxonomyService);
+
+    // Verificar si hay sectores en la base de datos
+    const sectors = await taxonomyService.getSectors();
+
+    // Si no hay sectores, iniciar sincronización
+    if (!sectors || sectors.length === 0) {
+      console.log(
+        "No se encontraron datos de taxonomía, iniciando sincronización..."
+      );
+      await taxonomyService.syncTaxonomyData();
+    } else {
+      console.log(`Datos de taxonomía encontrados: ${sectors.length} sectores`);
+    }
+  } catch (error) {
+    console.error("Error al verificar datos de taxonomía:", error.message);
+  }
 
   // Iniciar el servidor en el puerto 4000
   await app.listen(4000);

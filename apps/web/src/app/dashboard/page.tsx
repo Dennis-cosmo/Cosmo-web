@@ -147,6 +147,7 @@ export default function Dashboard() {
     sustainabilityScore: "RATIO: 2:4",
   });
   const [taxonomyActivities, setTaxonomyActivities] = useState<any[]>([]);
+  const [taxonomyError, setTaxonomyError] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
@@ -158,11 +159,25 @@ export default function Dashboard() {
       });
 
       // Actualizar actividades de taxonomía si existen
-      if (profile.taxonomyActivities && profile.taxonomyActivities.length > 0) {
+      if (
+        profile.taxonomyActivities &&
+        Array.isArray(profile.taxonomyActivities) &&
+        profile.taxonomyActivities.length > 0
+      ) {
+        console.log(
+          `Dashboard: Cargando ${profile.taxonomyActivities.length} actividades de taxonomía`
+        );
         setTaxonomyActivities(profile.taxonomyActivities);
+        setTaxonomyError(null);
       } else {
+        console.warn(
+          "Dashboard: No se encontraron actividades de taxonomía en el perfil"
+        );
         // Usar datos de respaldo si no hay datos reales
-        setTaxonomyActivities(staticData.taxonomyEligibleActivities);
+        setTaxonomyActivities([]);
+        setTaxonomyError(
+          "No se encontraron actividades de taxonomía registradas para este usuario"
+        );
       }
     }
   }, [profile]);
@@ -274,7 +289,16 @@ export default function Dashboard() {
               </div>
             ) : error ? (
               <div className="bg-red-500/20 p-4 rounded-lg text-center">
-                Error al cargar las actividades económicas
+                <p className="text-white mb-2">Error al cargar el perfil</p>
+                <p className="text-white/70 text-sm">{error}</p>
+              </div>
+            ) : taxonomyError ? (
+              <div className="bg-cosmo-800/70 border border-white/10 rounded-2xl p-8 text-center">
+                <p className="text-white/70 mb-2">{taxonomyError}</p>
+                <p className="text-white/50 text-sm">
+                  Por favor complete el registro de actividades económicas en su
+                  perfil
+                </p>
               </div>
             ) : taxonomyActivities.length === 0 ? (
               <div className="bg-cosmo-800/70 border border-white/10 rounded-2xl p-8 text-center">

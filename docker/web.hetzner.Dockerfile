@@ -81,75 +81,54 @@ RUN echo "[BUILD WEB] Verificando builds:" && \
     echo "[BUILD WEB] Contenido completo standalone:" && \
     find apps/web/.next/standalone -name "*.js" | head -10
 
-# Production stage
+# Verificación final antes de empaquetar en imagen de producción
+RUN echo "[BUILD WEB] Verificando builds:" && \
+    ls -la packages/shared/dist/ && \
+    ls -la packages/ui/dist/ && \
+    ls -la apps/web/.next/ 
+
+# Etapa final - Imagen de producción
 FROM base AS runner
 WORKDIR /app
 
-# Create app user for security (non-root)
-RUN addgroup --system --gid 1001 nextjs \
-    && adduser --system --uid 1001 --ingroup nextjs nextjs
+# Crear usuario para correr la app (seguridad)
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs --ingroup nodejs
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV GDPR_ENABLED true
-ENV DATA_PROCESSING_REGION EU
+# Configuración de producción
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copiar archivos de configuración raíz
-COPY --from=builder --chown=nextjs:nextjs /app/package.json ./package.json
-COPY --from=builder --chown=nextjs:nextjs /app/yarn.lock ./yarn.lock
+# Copiar las dependencias y archivos del builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 
-# Copiar scripts necesarios para runtime
-COPY --from=builder --chown=nextjs:nextjs /app/scripts ./scripts
+# Copiar la app Next.js compilada
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static /app/apps/web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public /app/apps/web/public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/BUILD_ID /app/apps/web/.next/BUILD_ID
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/routes-manifest.json /app/apps/web/.next/routes-manifest.json
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/required-server-files.json /app/apps/web/.next/required-server-files.json
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/server /app/apps/web/.next/server
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/app-build-manifest.json /app/apps/web/.next/app-build-manifest.json
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/build-manifest.json /app/apps/web/.next/build-manifest.json
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/prerender-manifest.json /app/apps/web/.next/prerender-manifest.json
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/next.config.js /app/apps/web/
 
-# Copiar aplicación web compilada (Next.js standalone)
-COPY --from=builder --chown=nextjs:nextjs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nextjs /app/apps/web/public ./apps/web/public
-COPY --from=builder --chown=nextjs:nextjs /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=builder --chown=nextjs:nextjs /app/apps/web/package.json ./apps/web/package.json
+# Permisos de directorio para nextjs
+RUN chown -R nextjs:nodejs /app
 
-# Copiar packages compilados necesarios
-COPY --from=builder --chown=nextjs:nextjs /app/packages/shared/dist ./packages/shared/dist
-COPY --from=builder --chown=nextjs:nextjs /app/packages/shared/package.json ./packages/shared/package.json
-COPY --from=builder --chown=nextjs:nextjs /app/packages/ui/dist ./packages/ui/dist
-COPY --from=builder --chown=nextjs:nextjs /app/packages/ui/package.json ./packages/ui/package.json
-
-# Verificar estructura en runner
-RUN echo "[RUNNER WEB] Verificando estructura copiada:" && \
-    ls -la && \
-    echo "Apps Web:" && \
-    ls -la apps/web/ && \
-    echo "Web .next:" && \
-    ls -la apps/web/.next/ && \
-    echo "Packages:" && \
-    ls -la packages/ && \
-    echo "Scripts:" && \
-    ls -la scripts/
-
-# Health check script (crear antes de cambiar de usuario)
-RUN echo 'const http = require("http"); \
-const options = { \
-  host: "localhost", \
-  port: process.env.PORT || 3000, \
-  path: "/api/health", \
-  timeout: 2000 \
-}; \
-const req = http.request(options, (res) => { \
-  process.exit(res.statusCode === 200 ? 0 : 1); \
-}); \
-req.on("error", (err) => { console.error(err); process.exit(1); }); \
-req.end();' > /app/healthcheck-web.js && \
-    chown nextjs:nextjs /app/healthcheck-web.js
-
+# Usuarios de producción para seguridad
 USER nextjs
 
+# Exponer puerto
 EXPOSE 3000
 
+# Health check para monitoreo GDPR
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+
+# Iniciar aplicación
 ENV PORT 3000
-
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node /app/healthcheck-web.js
-
-ENTRYPOINT ["dumb-init", "--"]
-
-# Start Next.js server from standalone build
-CMD ["node", "apps/web/server.js"] 
+WORKDIR /app/apps/web
+CMD ["node", "node_modules/.bin/next", "start"] 

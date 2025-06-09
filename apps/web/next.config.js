@@ -30,6 +30,8 @@ const nextConfig = {
           process.env.API_URL ||
           "http://api:4000";
 
+    console.log("URL de la API configurada:", apiUrl);
+
     return [
       // Excluimos las rutas de NextAuth de la redirección
       {

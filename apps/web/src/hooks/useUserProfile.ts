@@ -8,6 +8,19 @@ export interface UserProfile {
   firstName: string;
   lastName: string;
   companyName: string;
+  industry?: string;
+  companyLegalName?: string;
+  taxId?: string;
+  companySize?: string;
+  website?: string;
+  country?: string;
+  address?: string;
+  sustainabilityLevel?: string;
+  sustainabilityGoals?: string[];
+  certifications?: string[];
+  sustainabilityBudgetRange?: string;
+  sustainabilityNotes?: string;
+  createdAt?: string;
   euTaxonomySectorIds?: number[];
   euTaxonomySectorNames?: string[];
   euTaxonomyActivities?: any[];
@@ -50,6 +63,17 @@ export function useUserProfile() {
           const userData = await get<UserProfile>("users/dashboard-profile");
 
           if (userData) {
+            // Verificar que las actividades de taxonomía estén presentes
+            if (userData.taxonomyActivities) {
+              console.log(
+                `Actividades de taxonomía recibidas: ${userData.taxonomyActivities.length}`
+              );
+            } else {
+              console.warn(
+                "No se recibieron actividades de taxonomía en el perfil"
+              );
+            }
+
             setProfile(userData);
             setError(null);
             console.log(
@@ -61,6 +85,11 @@ export function useUserProfile() {
           }
         } catch (err: any) {
           console.error("Error al obtener el perfil del usuario:", err);
+
+          // Log detallado del error para diagnóstico
+          if (err.data) {
+            console.error("Detalles del error:", JSON.stringify(err.data));
+          }
 
           // Si el error es 401, el token puede haber expirado
           if (err.status === 401) {
@@ -75,6 +104,10 @@ export function useUserProfile() {
             } catch (updateErr) {
               console.error("Error al actualizar la sesión:", updateErr);
             }
+          } else if (err.status === 500) {
+            setError(
+              "Error interno del servidor. El equipo técnico ha sido notificado."
+            );
           } else {
             setError(err.message || "Error al cargar el perfil");
           }

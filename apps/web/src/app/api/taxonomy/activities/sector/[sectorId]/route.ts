@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { type NextRequest } from "next/server";
 
 // Datos de respaldo para cuando la API externa no está disponible
 const fallbackActivities = {
@@ -126,10 +128,21 @@ const fallbackActivities = {
 };
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { sectorId: string } }
 ) {
   try {
+    // Verificar la autenticación mediante JWT
+    const token = await getToken({
+      req: request as any,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+
+    // Si no hay token válido, devolver error 401
+    if (!token) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const sectorId = parseInt(params.sectorId, 10);
     if (isNaN(sectorId)) {
       return NextResponse.json(

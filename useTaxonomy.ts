@@ -1,12 +1,22 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import {
-  staticSectors,
-  staticActivities,
-  searchActivities as searchStaticActivities,
-  TaxonomySector,
-  TaxonomyActivity,
-} from "../data/taxonomyData";
+import { useSession } from "next-auth/react";
+
+// Definir las interfaces para los datos de taxonomía
+export interface TaxonomySector {
+  id: number;
+  name: string;
+  originalName?: string;
+}
+
+export interface TaxonomyActivity {
+  id: number;
+  name: string;
+  sectorId: number;
+  sectorName?: string; // Nombre del sector al que pertenece
+  naceCodes?: string[];
+  description?: string;
+}
 
 /**
  * Documentación de los endpoints de la Taxonomía EU usados:
@@ -23,108 +33,94 @@ import {
  * https://finance.ec.europa.eu/sustainable-finance/tools-and-standards/eu-taxonomy-sustainable-activities_en
  */
 
-// Datos estáticos de respaldo (fallback)
-const fallbackSectors: TaxonomySector[] = [
-  { id: 21, name: "Construcción y actividades inmobiliarias" },
-  { id: 4, name: "Energía" },
-  { id: 2, name: "Protección y restauración medioambiental" },
-  { id: 1, name: "Silvicultura" },
-  { id: 8, name: "Información y comunicación" },
-  { id: 3, name: "Manufactura" },
-  { id: 9, name: "Actividades profesionales, científicas y técnicas" },
-  { id: 6, name: "Transporte" },
-  { id: 5, name: "Suministro de agua, saneamiento, gestión de residuos" },
-];
-
 // Hook para obtener sectores de taxonomía
 export function useTaxonomySectors() {
-  const [sectors, setSectors] = useState<TaxonomySector[]>(staticSectors);
+  const [sectors, setSectors] = useState<TaxonomySector[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSectors = async () => {
       try {
-        // Inicialmente usamos datos estáticos pero intentamos actualizar con datos de API
         setLoading(true);
-        const response = await axios.get("/api/taxonomy/sectors");
-        const data = response.data;
-
-        if (data && Array.isArray(data) && data.length > 0) {
-          console.log("Sectores obtenidos de API:", data.length);
-          setSectors(data);
-        } else {
-          console.log(
-            "No se obtuvieron sectores de API, usando datos estáticos"
-          );
-        }
+        console.log("Solicitando sectores desde el hook");
+        // Usar la ruta API proxy local sin token (ya no es necesario)
+        const { data } = await axios.get("/api/taxonomy/sectors");
+        console.log(`Sectores recibidos: ${data.length}`);
+        setSectors(data);
         setError(null);
       } catch (err: any) {
         console.error("Error al obtener sectores de taxonomía:", err);
         setError(err.message || "Error al cargar sectores");
-        console.log("Usando datos estáticos de sectores debido al error");
-        // Ya tenemos datos estáticos cargados, así que no hacemos nada más
+        // Usar datos de respaldo si la API falla
+        setSectors([
+          { id: 21, name: "Construcción y actividades inmobiliarias" },
+          { id: 4, name: "Energía" },
+          { id: 2, name: "Protección y restauración medioambiental" },
+          { id: 1, name: "Silvicultura" },
+          { id: 8, name: "Información y comunicación" },
+          { id: 3, name: "Manufactura" },
+          { id: 9, name: "Actividades profesionales, científicas y técnicas" },
+          { id: 6, name: "Transporte" },
+          {
+            id: 5,
+            name: "Suministro de agua, saneamiento, gestión de residuos",
+          },
+        ]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchSectors();
-  }, []);
+  }, []); // Ya no depende de la sesión
 
   return { sectors, loading, error };
 }
 
 // Hook para obtener todas las actividades y filtrarlas por sectores seleccionados
 export function useAllTaxonomyActivities() {
-  const [allActivities, setAllActivities] =
-    useState<TaxonomyActivity[]>(staticActivities);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [allActivities, setAllActivities] = useState<TaxonomyActivity[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Cargar todas las actividades una sola vez
   useEffect(() => {
     const fetchAllActivities = async () => {
       try {
-        // Inicialmente usamos datos estáticos pero intentamos actualizar con datos de API
         setLoading(true);
-        const response = await axios.get(
+        console.log("Solicitando actividades desde el hook");
+        // Usar la ruta API proxy local sin token (ya no es necesario)
+        const { data } = await axios.get(
           "/api/taxonomy/activities/matches/all"
         );
-        const data = response.data;
+        console.log(`Actividades recibidas: ${data.length}`);
 
-        if (data && Array.isArray(data) && data.length > 0) {
-          console.log("Actividades obtenidas de API:", data.length);
+        // Asegurarse de que cada actividad tenga los campos necesarios
+        const processedActivities = data.map((activity: any) => ({
+          ...activity,
+          // Asegurar que todos los campos requeridos existan
+          id: activity.id || 0,
+          name: activity.name || "",
+          sectorId: activity.sectorId || 0,
+          sectorName: activity.sectorName || "",
+          naceCodes: activity.naceCodes || [],
+          description: activity.description || "",
+        }));
 
-          // Asegurarse de que cada actividad tenga los campos necesarios
-          const processedActivities = data.map((activity: any) => ({
-            ...activity,
-            id: activity.id || 0,
-            name: activity.name || "",
-            sectorId: activity.sectorId || 0,
-            sectorName: activity.sectorName || "",
-            naceCodes: activity.naceCodes || [],
-            description: activity.description || "",
-          }));
-
-          setAllActivities(processedActivities);
-        } else {
-          console.log(
-            "No se obtuvieron actividades de API, usando datos estáticos"
-          );
-        }
+        setAllActivities(processedActivities);
         setError(null);
       } catch (err: any) {
-        console.error("Error al obtener actividades:", err);
+        console.error("Error al obtener todas las actividades:", err);
         setError(err.message || "Error al cargar actividades");
-        console.log("Usando datos estáticos de actividades debido al error");
-        // Ya tenemos datos estáticos cargados, así que no hacemos nada más
+        setAllActivities([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchAllActivities();
-  }, []);
+  }, []); // Ya no depende de la sesión
 
   // Función para filtrar actividades por sectores seleccionados
   const getActivitiesBySectors = useCallback(
@@ -136,7 +132,18 @@ export function useAllTaxonomyActivities() {
         sectorIds.includes(activity.sectorId)
       );
 
-      return filteredActivities;
+      // Eliminar actividades duplicadas (puede haber actividades con el mismo ID pero diferente sectorId)
+      const uniqueActivities: TaxonomyActivity[] = [];
+      const activityIds = new Set();
+
+      for (const activity of filteredActivities) {
+        if (!activityIds.has(activity.id)) {
+          activityIds.add(activity.id);
+          uniqueActivities.push(activity);
+        }
+      }
+
+      return uniqueActivities;
     },
     [allActivities]
   );
@@ -163,45 +170,28 @@ export function useSearchTaxonomyActivities() {
 
     try {
       setLoading(true);
+      // Usar la ruta API proxy local
+      const { data } = await axios.get(
+        `/api/taxonomy/activities/search?query=${encodeURIComponent(query)}`
+      );
 
-      // Intentar obtener resultados de la API
-      try {
-        const response = await axios.get(
-          `/api/taxonomy/activities/search?query=${encodeURIComponent(query)}`
-        );
-        const data = response.data;
+      // Eliminar resultados duplicados por ID
+      const uniqueResults: TaxonomyActivity[] = [];
+      const resultIds = new Set();
 
-        if (data && Array.isArray(data) && data.length > 0) {
-          console.log("Resultados de búsqueda de API:", data.length);
-          setSearchResults(data);
-          setLoading(false);
-          return;
-        } else {
-          console.log(
-            "No se encontraron resultados en la API, buscando en datos estáticos"
-          );
+      for (const activity of data) {
+        if (!resultIds.has(activity.id)) {
+          resultIds.add(activity.id);
+          uniqueResults.push(activity);
         }
-      } catch (apiError) {
-        console.error(
-          "Error de API en búsqueda, usando datos estáticos:",
-          apiError
-        );
       }
 
-      // Si la API falla o no devuelve datos, usar la búsqueda estática
-      const results = searchStaticActivities(query);
-      console.log(
-        `Búsqueda estática para "${query}": ${results.length} resultados`
-      );
-      setSearchResults(results);
+      setSearchResults(uniqueResults);
       setError(null);
     } catch (err: any) {
       console.error(`Error al buscar actividades: ${err.message}`);
       setError(err.message || "Error al buscar actividades");
-
-      // Último recurso: búsqueda en datos estáticos
-      const results = searchStaticActivities(query);
-      setSearchResults(results);
+      setSearchResults([]);
     } finally {
       setLoading(false);
     }

@@ -499,10 +499,9 @@ export default function RegisterForm() {
         acceptTerms: formData.acceptTerms,
       };
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
-      console.log(`Usando API URL para registro: ${apiUrl}`);
-
-      const response = await fetch(`${apiUrl}/auth/register`, {
+      // Usar la ruta API interna de Next.js
+      console.log(`Usando API interna de Next.js para registro`);
+      const response = await fetch(`/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -255,7 +255,9 @@ export function CompanyProfile() {
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400">Sector</p>
             <p className="font-medium text-gray-900 dark:text-white">
-              {industryNames[displayData.industry] || displayData.industry}
+              {displayData.industry &&
+                (industryNames[displayData.industry as string] ||
+                  displayData.industry)}
             </p>
           </div>
           <div>

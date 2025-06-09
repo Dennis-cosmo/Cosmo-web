@@ -5,6 +5,8 @@ import {
   ParseIntPipe,
   Query,
   UseGuards,
+  Post,
+  Logger,
 } from "@nestjs/common";
 import {
   ApiOperation,
@@ -14,85 +16,85 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import {
-  TaxonomyService,
-  TaxonomySector,
-  TaxonomyActivity,
-} from "./taxonomy.service";
+import { TaxonomyService } from "./taxonomy.service";
+import { Public } from "../auth/decorators/public.decorator";
+import { AdminOnly } from "../auth/decorators/admin-only.decorator";
+import { TaxonomySector } from "./entities/taxonomy-sector.entity";
+import { TaxonomyActivity } from "./entities/taxonomy-activity.entity";
 
 @ApiTags("taxonomia")
 @Controller("taxonomy")
 export class TaxonomyController {
+  private readonly logger = new Logger(TaxonomyController.name);
+
   constructor(private readonly taxonomyService: TaxonomyService) {}
 
+  @Public()
   @Get("sectors")
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: "Obtiene todos los sectores de la taxonomía UE" })
-  @ApiQuery({
-    name: "objective",
-    required: false,
-    type: Number,
-    description:
-      "ID del objetivo (por defecto: 41 - mitigación del cambio climático)",
-  })
+  @ApiOperation({ summary: "Obtener todos los sectores de taxonomía" })
   @ApiResponse({
     status: 200,
-    description: "Lista de sectores obtenida correctamente",
+    description: "Lista de sectores de taxonomía",
+    type: TaxonomySector,
+    isArray: true,
   })
-  async getSectors(
-    @Query("objective") objective?: number
-  ): Promise<TaxonomySector[]> {
-    return this.taxonomyService.getSectors(objective || 41);
+  async getSectors(): Promise<TaxonomySector[]> {
+    return this.taxonomyService.getSectors();
   }
 
-  @Get("activities/sector/:sectorId")
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: "Obtiene actividades económicas por sector" })
-  @ApiParam({ name: "sectorId", type: Number, description: "ID del sector" })
+  @Public()
+  @Get("activities/all")
+  @ApiOperation({ summary: "Obtener todas las actividades de taxonomía" })
   @ApiResponse({
     status: 200,
-    description: "Lista de actividades obtenida correctamente",
+    description: "Lista de todas las actividades de taxonomía",
+    type: TaxonomyActivity,
+    isArray: true,
   })
-  async getActivitiesBySector(
-    @Param("sectorId", ParseIntPipe) sectorId: number
-  ): Promise<TaxonomyActivity[]> {
-    return this.taxonomyService.getActivitiesBySector(sectorId);
+  async getAllActivities(): Promise<TaxonomyActivity[]> {
+    return this.taxonomyService.getAllActivities();
   }
 
-  @Get("activities/:activityId")
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: "Obtiene detalles de una actividad específica" })
-  @ApiParam({
-    name: "activityId",
-    type: Number,
-    description: "ID de la actividad",
-  })
-  @ApiResponse({
-    status: 200,
-    description: "Detalles de la actividad obtenidos correctamente",
-  })
-  async getActivityDetails(
-    @Param("activityId", ParseIntPipe) activityId: number
-  ): Promise<TaxonomyActivity | null> {
-    return this.taxonomyService.getActivityDetails(activityId);
-  }
-
+  @Public()
   @Get("activities/search")
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: "Busca actividades económicas por texto" })
+  @ApiOperation({ summary: "Buscar actividades por término" })
   @ApiQuery({
     name: "query",
     required: true,
-    type: String,
-    description: "Texto a buscar",
+    description: "Término de búsqueda",
   })
   @ApiResponse({
     status: 200,
-    description: "Resultados de búsqueda obtenidos correctamente",
+    description: "Lista de actividades que coinciden con la búsqueda",
+    type: TaxonomyActivity,
+    isArray: true,
   })
   async searchActivities(
     @Query("query") query: string
   ): Promise<TaxonomyActivity[]> {
     return this.taxonomyService.searchActivities(query);
+  }
+
+  @AdminOnly()
+  @Post("sync")
+  @ApiOperation({
+    summary: "Sincronizar datos de taxonomía desde la API externa",
+    description:
+      "Actualiza la base de datos local con los datos más recientes de la API de taxonomía EU. Solo administradores.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Sincronización completada correctamente",
+  })
+  async syncTaxonomyData(): Promise<{ message: string }> {
+    try {
+      await this.taxonomyService.syncTaxonomyData();
+      return { message: "Datos de taxonomía sincronizados correctamente" };
+    } catch (error) {
+      this.logger.error(
+        `Error en sincronización de taxonomía: ${error.message}`
+      );
+      throw error;
+    }
   }
 }
