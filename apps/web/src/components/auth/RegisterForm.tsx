@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import Link from "next/link";
 import EUTaxonomySelector from "../ui/EUTaxonomySelector";
-import { TaxonomyActivity } from "../../hooks/useTaxonomy";
+import { TaxonomyActivity } from "../../data/taxonomyData";
 import { TermsModal } from "../modals/TermsModal";
 import { PrivacyModal } from "../modals/PrivacyModal";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "next-auth/react";
 
 // Paso 1: Esquema de validación de la cuenta
 const accountSchema = z
