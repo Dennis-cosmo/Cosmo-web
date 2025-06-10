@@ -1,21 +1,5 @@
-import {
-  Controller,
-  Get,
-  Param,
-  ParseIntPipe,
-  Query,
-  UseGuards,
-  Post,
-  Logger,
-} from "@nestjs/common";
-import {
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { Controller, Get, Query, Post, Logger } from "@nestjs/common";
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { TaxonomyService } from "./taxonomy.service";
 import { Public } from "../auth/decorators/public.decorator";
 import { AdminOnly } from "../auth/decorators/admin-only.decorator";
