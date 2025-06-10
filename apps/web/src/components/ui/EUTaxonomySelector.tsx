@@ -5,9 +5,8 @@ import {
   useTaxonomySectors,
   useAllTaxonomyActivities,
   useSearchTaxonomyActivities,
-  TaxonomySector,
-  TaxonomyActivity,
 } from "../../hooks/useTaxonomy";
+import { TaxonomySector, TaxonomyActivity } from "../../data/taxonomyData";
 
 interface EUTaxonomyActivityProps {
   activity: TaxonomyActivity;
@@ -97,20 +96,24 @@ const EUTaxonomyActivityItem = ({
 
 interface EUTaxonomySelectorProps {
   selectedSectorIds?: number[];
+  selectedSectorNames?: string[];
   selectedActivities: TaxonomyActivity[];
   onSectorsChange: (sectorIds: number[], sectorNames: string[]) => void;
   onActivitiesChange: (activities: TaxonomyActivity[]) => void;
   maxActivities?: number;
   disabled?: boolean;
+  error?: string;
 }
 
 export default function EUTaxonomySelector({
   selectedSectorIds = [],
+  selectedSectorNames = [],
   selectedActivities = [],
   onSectorsChange,
   onActivitiesChange,
   maxActivities = 3,
   disabled = false,
+  error,
 }: EUTaxonomySelectorProps) {
   const { sectors, loading: loadingSectors } = useTaxonomySectors();
   const {
@@ -125,18 +128,6 @@ export default function EUTaxonomySelector({
   } = useSearchTaxonomyActivities();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
-
-  // Obtener nombres de sectores seleccionados
-  const selectedSectorNames = useMemo(() => {
-    if (!sectors.length || !selectedSectorIds.length) return [];
-
-    return selectedSectorIds
-      .map((id) => {
-        const sector = sectors.find((s) => s.id === id);
-        return sector ? sector.name : "";
-      })
-      .filter((name) => name !== "");
-  }, [sectors, selectedSectorIds]);
 
   // Obtener actividades filtradas por los sectores seleccionados
   const filteredActivitiesBySector = useMemo(() => {

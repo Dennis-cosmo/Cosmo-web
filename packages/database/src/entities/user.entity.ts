@@ -18,6 +18,11 @@ export enum CompanySize {
   ENTERPRISE = "1000+",
 }
 
+export enum TaxonomyType {
+  EU = "EU",
+  LATAM = "LATAM",
+}
+
 export enum SustainabilityLevel {
   BEGINNER = "beginner",
   INTERMEDIATE = "intermediate",
@@ -81,6 +86,10 @@ export class User {
 
   @Column({ nullable: true, type: "varchar" })
   address?: string;
+
+  // Taxonomía
+  @Column({ nullable: true, type: "varchar", enum: TaxonomyType })
+  taxonomyType?: TaxonomyType;
 
   // Taxonomía de la UE
   @Column({ nullable: true, type: "simple-array" })

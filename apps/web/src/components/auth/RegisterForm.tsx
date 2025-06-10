@@ -68,6 +68,10 @@ const companySchema = z.object({
   country: z.string().optional(),
   address: z.string().optional(),
 
+  // Taxonomía
+  taxonomyType: z.enum(["EU", "LATAM"], {
+    required_error: "Por favor selecciona un tipo de taxonomía",
+  }),
   // Taxonomía EU
   euTaxonomySectorIds: z.array(z.number()).min(0),
   euTaxonomySectorNames: z.array(z.string()).min(0),
@@ -132,6 +136,10 @@ const registerSchema = z
     country: z.string().optional(),
     address: z.string().optional(),
 
+    // Taxonomía
+    taxonomyType: z.enum(["EU", "LATAM"], {
+      required_error: "Por favor selecciona un tipo de taxonomía",
+    }),
     // Taxonomía EU
     euTaxonomySectorIds: z.array(z.number()).min(0),
     euTaxonomySectorNames: z.array(z.string()).min(0),
@@ -280,6 +288,8 @@ export default function RegisterForm() {
     country: "",
     address: "",
 
+    // Taxonomía
+    taxonomyType: "" as "EU" | "LATAM" | "",
     // Taxonomía EU
     euTaxonomySectorIds: [] as number[],
     euTaxonomySectorNames: [] as string[],
@@ -491,6 +501,7 @@ export default function RegisterForm() {
         website: formData.website,
         country: formData.country,
         address: formData.address,
+        taxonomyType: formData.taxonomyType,
         euTaxonomySectorIds: formData.euTaxonomySectorIds,
         euTaxonomySectorNames: formData.euTaxonomySectorNames,
         euTaxonomyActivities: formData.euTaxonomyActivities,
@@ -732,6 +743,66 @@ export default function RegisterForm() {
           )}
         </div>
 
+        <div className="mt-6">
+          <label className="block mb-2 text-sm font-medium text-gray-700">
+            Tipo de Taxonomía*
+          </label>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              type="button"
+              className={`p-4 border rounded-lg text-center ${
+                formData.taxonomyType === "EU"
+                  ? "border-eco-green bg-eco-green/10 text-eco-green"
+                  : "border-gray-300 hover:border-eco-green"
+              }`}
+              onClick={() =>
+                handleChange({
+                  target: { name: "taxonomyType", value: "EU" },
+                } as any)
+              }
+            >
+              <h4 className="font-medium mb-1">Taxonomía EU</h4>
+              <p className="text-sm text-gray-600">
+                Para empresas que operan bajo la taxonomía de la Unión Europea
+              </p>
+            </button>
+            <button
+              type="button"
+              className={`p-4 border rounded-lg text-center ${
+                formData.taxonomyType === "LATAM"
+                  ? "border-eco-green bg-eco-green/10 text-eco-green"
+                  : "border-gray-300 hover:border-eco-green"
+              }`}
+              onClick={() =>
+                handleChange({
+                  target: { name: "taxonomyType", value: "LATAM" },
+                } as any)
+              }
+            >
+              <h4 className="font-medium mb-1">Taxonomía LATAM</h4>
+              <p className="text-sm text-gray-600">
+                Para empresas que operan bajo la taxonomía de Latinoamérica
+              </p>
+            </button>
+          </div>
+          {errors.taxonomyType && (
+            <p className="mt-1 text-sm text-red-600">{errors.taxonomyType}</p>
+          )}
+        </div>
+
+        {formData.taxonomyType === "EU" && (
+          <div className="mt-6">
+            <EUTaxonomySelector
+              selectedSectorIds={formData.euTaxonomySectorIds}
+              selectedSectorNames={formData.euTaxonomySectorNames}
+              selectedActivities={formData.euTaxonomyActivities}
+              onSectorsChange={handleSectorsChange}
+              onActivitiesChange={handleActivitiesChange}
+              error={errors.euTaxonomySectorIds || errors.euTaxonomyActivities}
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div>
             <label
@@ -854,55 +925,6 @@ export default function RegisterForm() {
             {errors.address && (
               <p className="mt-1 text-sm text-red-600">{errors.address}</p>
             )}
-          </div>
-        </div>
-
-        <div className="mt-6 bg-blue-50 rounded-lg border border-blue-100 overflow-hidden">
-          <div className="p-3 sm:p-4 md:p-5 bg-blue-100/70">
-            <h4 className="text-base sm:text-lg font-medium text-blue-800">
-              Taxonomía de Finanzas Sostenibles UE
-            </h4>
-            <p className="text-xs sm:text-sm text-blue-700 mt-1">
-              La Taxonomía UE es un sistema de clasificación que establece qué
-              actividades económicas se consideran ambientalmente sostenibles.
-              Esta información nos ayuda a analizar tus gastos en el contexto de
-              cumplimiento con la taxonomía.
-            </p>
-          </div>
-
-          <div className="p-3 sm:p-4 md:p-5">
-            <EUTaxonomySelector
-              selectedSectorIds={formData.euTaxonomySectorIds}
-              selectedActivities={formData.euTaxonomyActivities}
-              onSectorsChange={handleSectorsChange}
-              onActivitiesChange={handleActivitiesChange}
-              disabled={isLoading}
-            />
-
-            <div className="mt-3 text-xs">
-              <a
-                href="https://ec.europa.eu/sustainable-finance-taxonomy/wizard"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 flex items-center"
-              >
-                <span>Más información sobre la Taxonomía UE</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-3 w-3 ml-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </a>
-            </div>
           </div>
         </div>
       </div>

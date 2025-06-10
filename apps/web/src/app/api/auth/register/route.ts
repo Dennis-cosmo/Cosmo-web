@@ -12,6 +12,14 @@ export async function POST(request: Request) {
     const data = await request.json();
     console.log("Registro de usuario - proxy a API:", API_URL);
 
+    // Validar el tipo de taxonomía si está presente
+    if (data.taxonomyType && !["EU", "LATAM"].includes(data.taxonomyType)) {
+      return NextResponse.json(
+        { message: "Tipo de taxonomía inválido" },
+        { status: 400 }
+      );
+    }
+
     // Enviar la petición al backend real
     const apiResponse = await fetch(`${API_URL}/auth/register`, {
       method: "POST",
