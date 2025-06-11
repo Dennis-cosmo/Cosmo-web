@@ -523,7 +523,7 @@ export class AuthService {
       // Añadir cada campo en onboardingData a la consulta
       Object.entries(onboardingData).forEach(([key, value]) => {
         query += `, "${key}" = $${paramIndex}`;
-        values.push(value === undefined ? null : String(value));
+        values.push(value === undefined || value === null ? "" : String(value));
         paramIndex++;
       });
 

@@ -60,6 +60,9 @@ async function resetUserPassword() {
     const updatedUser = await userRepository.findOne({
       where: { id: user.id },
     });
+    if (!updatedUser) {
+      throw new Error(`User with id ${user.id} not found`);
+    }
     console.log(
       `✅ Usuario actualizado. Nuevo hash: ${updatedUser.passwordHash}`
     );

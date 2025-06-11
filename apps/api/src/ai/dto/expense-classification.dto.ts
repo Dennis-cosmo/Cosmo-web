@@ -54,23 +54,23 @@ export class AiOptionsDto {
 export class ExpenseDataDto {
   @IsString()
   @ApiProperty({ description: "Identificador único del gasto" })
-  id: string;
+  id!: string;
 
   @IsString()
   @ApiProperty({ description: "Fecha del gasto en formato ISO" })
-  date: string;
+  date!: string;
 
   @IsString()
   @ApiProperty({ description: "Descripción del gasto" })
-  description: string;
+  description!: string;
 
   @IsNumber()
   @ApiProperty({ description: "Monto del gasto" })
-  amount: number;
+  amount!: number;
 
   @IsString()
   @ApiProperty({ description: "Moneda del gasto" })
-  currency: string;
+  currency!: string;
 
   @IsString()
   @IsOptional()
@@ -104,7 +104,7 @@ export class ExpenseClassificationDto {
   @ValidateNested()
   @Type(() => ExpenseDataDto)
   @ApiProperty({ description: "Datos del gasto a clasificar" })
-  expense: ExpenseDataDto;
+  expense!: ExpenseDataDto;
 
   @IsObject()
   @IsOptional()

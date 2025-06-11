@@ -43,7 +43,7 @@ export class DataRetentionService {
       await this.deleteOldSyncLogs(cutoffDate);
 
       this.logger.log("Limpieza de datos completada exitosamente");
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error en la limpieza de datos: ${error.message}`);
     }
   }
@@ -64,7 +64,7 @@ export class DataRetentionService {
       );
 
       this.logger.log(`Archivados ${result.affected} gastos antiguos`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error al archivar gastos: ${error.message}`);
       throw error;
     }
@@ -82,7 +82,7 @@ export class DataRetentionService {
       this.logger.log(
         `Eliminados ${result.affected} logs de sincronización antiguos`
       );
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Error al eliminar logs de sincronización: ${error.message}`
       );

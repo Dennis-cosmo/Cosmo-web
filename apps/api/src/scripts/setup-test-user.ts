@@ -84,7 +84,6 @@ async function setupTestUser() {
 
         // Verificar la actualización
         user = await userRepository.findOne({ where: { id: user.id } });
-        console.log(`Nuevo hash: ${user.passwordHash}`);
       } else if (user.passwordHash.startsWith("$2")) {
         console.log("✅ El hash ya está en formato correcto (sin prefijo)");
       } else {

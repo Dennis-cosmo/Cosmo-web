@@ -21,7 +21,7 @@ async function populateTaxonomyData() {
   console.log("Iniciando población de datos de taxonomía EU...");
 
   // Conexión a la base de datos
-  let connection: DataSource;
+  let connection: DataSource | undefined;
 
   try {
     connection = await new DataSource({
@@ -70,7 +70,7 @@ async function populateTaxonomyData() {
     }
 
     console.log("Población de datos de taxonomía EU completada");
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error en población de datos: ${error.message}`);
     throw error;
   } finally {
@@ -110,13 +110,17 @@ async function syncSectors(connection: DataSource) {
         await sectorRepository.save(sector);
         successCount++;
       } catch (err) {
-        console.error(`Error al guardar sector ${sector.id}: ${err.message}`);
+        console.error(
+          `Error al guardar sector ${sector.id}: ${err instanceof Error ? err.message : String(err)}`
+        );
       }
     }
 
     console.log(`${successCount} sectores sincronizados correctamente`);
   } catch (error) {
-    console.error(`Error al sincronizar sectores: ${error.message}`);
+    console.error(
+      `Error al sincronizar sectores: ${error instanceof Error ? error.message : String(error)}`
+    );
     throw error;
   }
 }
@@ -192,14 +196,16 @@ async function syncActivities(connection: DataSource) {
         successCount++;
       } catch (err) {
         console.error(
-          `Error al guardar actividad ${activity.id}: ${err.message}`
+          `Error al guardar actividad ${activity.id}: ${err instanceof Error ? err.message : String(err)}`
         );
       }
     }
 
     console.log(`${successCount} actividades sincronizadas correctamente`);
   } catch (error) {
-    console.error(`Error al sincronizar actividades: ${error.message}`);
+    console.error(
+      `Error al sincronizar actividades: ${error instanceof Error ? error.message : String(error)}`
+    );
     throw error;
   }
 }

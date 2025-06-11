@@ -15,7 +15,7 @@ import {
 
 @Injectable()
 export class DeepSeekProvider implements AiProvider {
-  private openai: OpenAIApi;
+  private openai!: OpenAIApi;
   private readonly logger = new Logger(DeepSeekProvider.name);
   readonly providerName = "deepseek";
 

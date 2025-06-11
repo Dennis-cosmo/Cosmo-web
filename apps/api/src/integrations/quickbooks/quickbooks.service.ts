@@ -16,11 +16,11 @@ export class QuickBooksService {
     private userRepository: Repository<User>,
     private configService: ConfigService
   ) {
-    this.apiUrl = this.configService.get<string>("QUICKBOOKS_API_URL");
-    this.clientId = this.configService.get<string>("QUICKBOOKS_CLIENT_ID");
-    this.clientSecret = this.configService.get<string>(
-      "QUICKBOOKS_CLIENT_SECRET"
-    );
+    this.apiUrl = this.configService.get<string>("QUICKBOOKS_API_URL") || "";
+    this.clientId =
+      this.configService.get<string>("QUICKBOOKS_CLIENT_ID") || "";
+    this.clientSecret =
+      this.configService.get<string>("QUICKBOOKS_CLIENT_SECRET") || "";
   }
 
   /**
@@ -58,7 +58,7 @@ export class QuickBooksService {
 
       const data = await response.json();
       return this.transformExpenses(data);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Error al obtener gastos de QuickBooks: ${error.message}`
       );
@@ -88,7 +88,7 @@ export class QuickBooksService {
         quickbooksAccessToken: accessToken,
         quickbooksRefreshToken: refreshToken,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Error al actualizar token de QuickBooks: ${error.message}`
       );

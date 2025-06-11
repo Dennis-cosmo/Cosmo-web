@@ -4,14 +4,14 @@ import { TaxonomyActivity } from "./taxonomy-activity.entity";
 @Entity()
 export class TaxonomySector {
   @PrimaryColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ nullable: true })
-  originalName: string;
+  originalName!: string;
 
   @OneToMany(() => TaxonomyActivity, (activity) => activity.sector)
-  activities: TaxonomyActivity[];
+  activities!: TaxonomyActivity[];
 }

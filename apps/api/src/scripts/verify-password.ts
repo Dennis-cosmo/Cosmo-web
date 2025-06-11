@@ -84,7 +84,7 @@ async function verifyPassword() {
             Ó: "O",
             Ú: "U",
           };
-          return replacements[char] || char;
+          return replacements[char as keyof typeof replacements] || char;
         }
       );
 

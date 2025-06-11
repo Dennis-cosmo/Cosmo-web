@@ -74,7 +74,7 @@ export class TaxonomyController {
     try {
       await this.taxonomyService.syncTaxonomyData();
       return { message: "Datos de taxonomía sincronizados correctamente" };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Error en sincronización de taxonomía: ${error.message}`
       );

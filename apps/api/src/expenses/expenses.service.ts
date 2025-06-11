@@ -33,7 +33,11 @@ export class ExpensesService {
    * Busca un gasto por su ID
    */
   async findOne(id: string): Promise<Expense> {
-    return this.expensesRepository.findOne({ where: { id } });
+    const expense = await this.expensesRepository.findOne({ where: { id } });
+    if (!expense) {
+      throw new Error(`Expense with id ${id} not found`);
+    }
+    return expense;
   }
 
   /**
@@ -75,7 +79,11 @@ export class ExpensesService {
    */
   async update(id: string, expenseData: Partial<Expense>): Promise<Expense> {
     await this.expensesRepository.update(id, expenseData);
-    return this.expensesRepository.findOne({ where: { id } });
+    const expense = await this.expensesRepository.findOne({ where: { id } });
+    if (!expense) {
+      throw new Error(`Expense with id ${id} not found`);
+    }
+    return expense;
   }
 
   /**
@@ -98,7 +106,7 @@ export class ExpensesService {
     ];
 
     return fieldsToCompare.some(
-      (field) => existingExpense[field] !== newExpense[field]
+      (field) => existingExpense[field as keyof Expense] !== newExpense[field]
     );
   }
 
@@ -144,7 +152,7 @@ export class ExpensesService {
             syncLog.syncStats.newItems++;
             return newExpense;
           }
-        } catch (error) {
+        } catch (error: any) {
           syncLog.syncStats.failedItems++;
           this.logger.error(
             `Error al sincronizar gasto ${expense.sourceId}: ${error.message}`
@@ -154,7 +162,7 @@ export class ExpensesService {
       })
     );
 
-    return results.filter(Boolean);
+    return results.filter((result): result is Expense => result !== null);
   }
 
   /**
@@ -216,7 +224,7 @@ export class ExpensesService {
       await this.syncLogRepository.save(syncLog);
 
       return savedExpenses;
-    } catch (error) {
+    } catch (error: any) {
       // Actualizar el log con el error
       syncLog.status = "failed";
       syncLog.error = error.message;

@@ -4,21 +4,21 @@ import { TaxonomySector } from "./taxonomy-sector.entity";
 @Entity()
 export class TaxonomyActivity {
   @PrimaryColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ nullable: true })
-  description: string;
+  description!: string;
 
   @Column()
-  sectorId: number;
+  sectorId!: number;
 
   @ManyToOne(() => TaxonomySector, (sector) => sector.activities)
   @JoinColumn({ name: "sectorId" })
-  sector: TaxonomySector;
+  sector!: TaxonomySector;
 
   @Column("simple-array", { nullable: true })
-  naceCodes: string[];
+  naceCodes!: string[];
 }

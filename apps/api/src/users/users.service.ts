@@ -17,10 +17,7 @@ export class UsersService {
       throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
     }
 
-    // Crear un nuevo objeto sin el passwordHash para evitar exponerlo
-    const result = { ...user };
-    delete result.passwordHash;
-
+    const { passwordHash, ...result } = user;
     return result;
   }
 
@@ -32,7 +29,7 @@ export class UsersService {
       user.euTaxonomyActivities &&
       Array.isArray(user.euTaxonomyActivities) &&
       user.euTaxonomyActivities.length > 0
-        ? user.euTaxonomyActivities.map((activity) => {
+        ? user.euTaxonomyActivities.map((activity: any) => {
             return {
               name:
                 activity.name +

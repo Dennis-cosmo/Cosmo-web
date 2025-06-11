@@ -62,7 +62,7 @@ async function bootstrap() {
     } else {
       console.log(`Datos de taxonomía encontrados: ${sectors.length} sectores`);
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error al verificar datos de taxonomía:", error.message);
   }
 

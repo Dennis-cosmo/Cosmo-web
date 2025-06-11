@@ -26,7 +26,7 @@ export class TaxonomyService {
   async getSectors(): Promise<TaxonomySector[]> {
     try {
       return await this.sectorRepository.find();
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error al obtener sectores: ${error.message}`);
       return [];
     }
@@ -40,7 +40,7 @@ export class TaxonomyService {
       return await this.activityRepository.find({
         relations: ["sector"],
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error al obtener actividades: ${error.message}`);
       return [];
     }
@@ -57,7 +57,7 @@ export class TaxonomyService {
         .where("activity.name ILIKE :query", { query: `%${query}%` })
         .orWhere("activity.naceCodes ILIKE :query", { query: `%${query}%` })
         .getMany();
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error al buscar actividades: ${error.message}`);
       return [];
     }
@@ -77,7 +77,7 @@ export class TaxonomyService {
       await this.syncActivities();
 
       this.logger.log("Sincronización de datos de taxonomía completada");
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error en sincronización: ${error.message}`);
       throw error;
     }
@@ -111,7 +111,7 @@ export class TaxonomyService {
       }
 
       this.logger.log(`${sectors.length} sectores sincronizados correctamente`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error al sincronizar sectores: ${error.message}`);
       throw error;
     }
@@ -174,7 +174,7 @@ export class TaxonomyService {
       this.logger.log(
         `${activities.length} actividades sincronizadas correctamente`
       );
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error al sincronizar actividades: ${error.message}`);
       throw error;
     }

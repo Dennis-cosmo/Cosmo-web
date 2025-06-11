@@ -27,19 +27,19 @@ export enum SustainabilityLevel {
 // DTO para actividades económicas según la taxonomía de la UE
 export class EconomicActivityDto {
   @IsNumber({}, { message: "El ID de la actividad debe ser un número" })
-  id: number;
+  id!: number;
 
   @IsString({
     message: "El nombre de la actividad debe ser una cadena de texto",
   })
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsArray({ message: "Los códigos NACE deben ser un array" })
   naceCodes?: string[];
 
   @IsNumber({}, { message: "El ID del sector debe ser un número" })
-  sectorId: number;
+  sectorId!: number;
 
   @IsOptional()
   @IsString({ message: "El nombre del sector debe ser una cadena de texto" })
@@ -49,21 +49,21 @@ export class EconomicActivityDto {
 export class RegisterDto {
   @IsEmail({}, { message: "El email debe ser válido" })
   @IsNotEmpty({ message: "El email es requerido" })
-  email: string;
+  email!: string;
 
   @IsNotEmpty({ message: "La contraseña es requerida" })
   @MinLength(8, { message: "La contraseña debe tener al menos 8 caracteres" })
-  password: string;
+  password!: string;
 
   @IsNotEmpty({ message: "El nombre es requerido" })
   @IsString({ message: "El nombre debe ser una cadena de texto" })
   @MinLength(2, { message: "El nombre debe tener al menos 2 caracteres" })
-  firstName: string;
+  firstName!: string;
 
   @IsNotEmpty({ message: "El apellido es requerido" })
   @IsString({ message: "El apellido debe ser una cadena de texto" })
   @MinLength(2, { message: "El apellido debe tener al menos 2 caracteres" })
-  lastName: string;
+  lastName!: string;
 
   // Información de la empresa
   @IsOptional()

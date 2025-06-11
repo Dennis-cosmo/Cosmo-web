@@ -39,13 +39,13 @@ export class SyncSchedulerService {
       for (const user of users) {
         try {
           await this.syncUserData(user);
-        } catch (error) {
+        } catch (error: any) {
           this.logger.error(
             `Error al sincronizar datos del usuario ${user.id}: ${error.message}`
           );
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Error en la sincronización programada: ${error.message}`
       );
@@ -81,7 +81,7 @@ export class SyncSchedulerService {
           `No es necesario sincronizar para el usuario ${user.id} - última sincronización: ${lastSyncDate}`
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Error al sincronizar datos del usuario ${user.id}: ${error.message}`
       );

@@ -13,20 +13,20 @@ import {
 @Entity("ai_cache")
 export class AiCache {
   @PrimaryGeneratedColumn("uuid")
-  id: string;
+  id!: string;
 
   @Column()
   @Index()
-  key: string;
+  key!: string;
 
   @Column({ type: "text" })
-  result: string;
+  result!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @Column()
-  expiresAt: Date;
+  expiresAt!: Date;
 
   @Column({ nullable: true })
   promptTokens?: number;

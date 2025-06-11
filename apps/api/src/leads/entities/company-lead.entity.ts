@@ -8,20 +8,20 @@ import {
 @Entity()
 export class CompanyLead {
   @PrimaryGeneratedColumn("uuid")
-  id: string;
+  id!: string;
 
   @Column()
-  companyName: string;
+  companyName!: string;
 
   @Column()
-  contactEmail: string;
+  contactEmail!: string;
 
   @Column()
-  contactName: string;
+  contactName!: string;
 
   @Column({ nullable: true })
   message?: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

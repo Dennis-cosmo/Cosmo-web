@@ -35,13 +35,13 @@ export class UserContextDto {
 export class SustainabilityAnalysisDto {
   @ApiProperty({ description: "Lista de gastos a analizar" })
   @IsArray()
-  expenses: any[];
+  expenses!: any[];
 
   @ApiProperty({ description: "Información contextual del usuario" })
   @IsObject()
   @ValidateNested()
   @Type(() => UserContextDto)
-  userContext: UserContextDto;
+  userContext!: UserContextDto;
 
   @ApiProperty({
     required: false,
@@ -59,30 +59,30 @@ export class SustainabilityAnalysisDto {
  */
 export class SustainabilityAnalysisResultDto {
   @ApiProperty({ description: "Gastos clasificados como sostenibles" })
-  sustainableExpenses: any[];
+  sustainableExpenses!: any[];
 
   @ApiProperty({ description: "Gastos clasificados como no sostenibles" })
-  nonSustainableExpenses: any[];
+  nonSustainableExpenses!: any[];
 
   @ApiProperty({ description: "Total de gastos sostenibles" })
-  sustainableTotal: number;
+  sustainableTotal!: number;
 
   @ApiProperty({ description: "Total de gastos no sostenibles" })
-  nonSustainableTotal: number;
+  nonSustainableTotal!: number;
 
   @ApiProperty({ description: "Porcentaje de gastos sostenibles" })
-  sustainablePercentage: number;
+  sustainablePercentage!: number;
 
   @ApiProperty({
     description: "Recomendaciones para mejorar la sostenibilidad",
   })
-  recommendations: string[];
+  recommendations!: string[];
 
   @ApiProperty({ description: "Información del modelo utilizado" })
-  model: string;
+  model!: string;
 
   @ApiProperty({ description: "Información de uso del modelo" })
-  usage: {
+  usage!: {
     promptTokens: number;
     completionTokens: number;
     totalTokens: number;

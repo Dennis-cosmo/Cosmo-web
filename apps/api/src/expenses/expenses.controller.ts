@@ -33,7 +33,7 @@ export class ExpensesController {
     description: "Lista de gastos del usuario",
     type: [Expense],
   })
-  async findAll(@Request() req) {
+  async findAll(@Request() req: any) {
     const userId = req.user.id;
     this.logger.log(`Buscando gastos para el usuario ${userId}`);
     return this.expensesService.findAllByUserId(userId);
@@ -48,7 +48,7 @@ export class ExpensesController {
     type: [Expense],
   })
   async syncExpenses(
-    @Request() req,
+    @Request() req: any,
     @Body() data: { expenses: any[]; sourceSystem: string }
   ) {
     const userId = req.user.id;
@@ -69,7 +69,7 @@ export class ExpensesController {
         count: syncedExpenses.length,
         expenses: syncedExpenses,
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error en la sincronización: ${error.message}`);
       throw error;
     }
@@ -90,7 +90,7 @@ export class ExpensesController {
     description: "Simulación de sincronización exitosa",
   })
   async syncExpensesInMemory(
-    @Request() req,
+    @Request() req: any,
     @Body() data: { expenses: any[]; sourceSystem: string }
   ) {
     const userId = req.user.id;
@@ -109,7 +109,7 @@ export class ExpensesController {
         message: "Sincronización en memoria completada correctamente",
         count: data.expenses.length,
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Error en la simulación de sincronización: ${error.message}`
       );
@@ -125,7 +125,7 @@ export class ExpensesController {
     description: "El gasto ha sido creado correctamente",
     type: Expense,
   })
-  async create(@Request() req, @Body() expenseData: Partial<Expense>) {
+  async create(@Request() req: any, @Body() expenseData: Partial<Expense>) {
     const userId = req.user.id;
     return this.expensesService.create({
       ...expenseData,
@@ -141,7 +141,7 @@ export class ExpensesController {
     description: "Detalles del gasto",
     type: Expense,
   })
-  async findOne(@Param("id") id: string, @Request() req) {
+  async findOne(@Param("id") id: string, @Request() req: any) {
     // En una implementación real, validaríamos que el gasto pertenece al usuario
     return this.expensesService.findOne(id);
   }
@@ -157,7 +157,7 @@ export class ExpensesController {
   async update(
     @Param("id") id: string,
     @Body() expenseData: Partial<Expense>,
-    @Request() req
+    @Request() req: any
   ) {
     // En una implementación real, validaríamos que el gasto pertenece al usuario
     return this.expensesService.update(id, expenseData);
@@ -170,7 +170,7 @@ export class ExpensesController {
     status: 200,
     description: "El gasto ha sido eliminado correctamente",
   })
-  async remove(@Param("id") id: string, @Request() req) {
+  async remove(@Param("id") id: string, @Request() req: any) {
     // En una implementación real, validaríamos que el gasto pertenece al usuario
     await this.expensesService.remove(id);
     return { message: "Gasto eliminado correctamente" };

@@ -78,6 +78,9 @@ async function runPasswordOperation() {
       const updatedUser = await userRepository.findOne({
         where: { id: user.id },
       });
+      if (!updatedUser) {
+        throw new Error(`User with id ${user.id} not found`);
+      }
 
       console.log("¡Contraseña actualizada con éxito!");
       console.log(`Nuevo Password Hash: ${updatedUser.passwordHash}`);

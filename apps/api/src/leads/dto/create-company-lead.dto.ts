@@ -10,16 +10,16 @@ export class CreateCompanyLeadDto {
   @IsNotEmpty()
   @IsString()
   @MaxLength(100)
-  companyName: string;
+  companyName!: string;
 
   @IsNotEmpty()
   @IsEmail()
-  contactEmail: string;
+  contactEmail!: string;
 
   @IsNotEmpty()
   @IsString()
   @MaxLength(100)
-  contactName: string;
+  contactName!: string;
 
   @IsOptional()
   @IsString()

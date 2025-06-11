@@ -42,13 +42,13 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Patch("complete-onboarding")
   @HttpCode(HttpStatus.OK)
-  async completeOnboarding(@Request() req, @Body() onboardingData: any) {
+  async completeOnboarding(@Request() req: any, @Body() onboardingData: any) {
     return this.authService.completeOnboarding(req.user.id, onboardingData);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get("profile")
-  getProfile(@Request() req) {
+  getProfile(@Request() req: any) {
     return req.user;
   }
 }
