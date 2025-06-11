@@ -6,7 +6,7 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc -b .",
+    "build": "tsc -b . --noEmitOnError false",
     "dev": "tsup src/index.ts --format cjs,esm --watch --dts",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "clean": "rm -rf dist && rm -rf node_modules"
