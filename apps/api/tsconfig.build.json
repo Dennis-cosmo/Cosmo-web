@@ -5,7 +5,7 @@
     "noImplicitAny": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": false,
-    "noEmitOnError": false
+    "noEmitOnError": false,
     "outDir": "./dist",
     "composite": true,
     "incremental": true,
