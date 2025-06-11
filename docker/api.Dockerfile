@@ -3,17 +3,17 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copiamos primero solo package.json, yarn.lock y babel.config.js desde el monorepo raíz
+# Copiamos primero los archivos de config al root
 COPY package.json yarn.lock babel.config.js ./
 
-# Copiamos ahora el resto del código fuente del monorepo (apps, packages, etc)
+# Copiamos el resto del código fuente del monorepo (apps, packages, etc)
 COPY . .
 
-# Instalamos dependencias completas con workspaces (monorepo)
+# Instalamos todas las dependencias con workspaces habilitados
 RUN yarn install --frozen-lockfile
 
-# Ejecutamos el build del workspace de la API
-RUN yarn workspace @cosmo/api build
+# Ejecutamos el build de la API desde el root
+RUN yarn workspace @cosmo/api run build
 
 # Etapa de producción
 FROM node:18-alpine AS runner
@@ -31,13 +31,6 @@ COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
 # Copiamos node_modules completo (instalado en builder)
 COPY --from=builder /app/node_modules ./node_modules
 
-# Copiamos también el babel.config.js por si es requerido en runtime (opcional)
-COPY --from=builder /app/babel.config.js ./babel.config.js
-
-# Copiamos el package.json raíz por consistencia (opcional)
-COPY --from=builder /app/package.json ./package.json
-
 EXPOSE 4000
 
-# Comando de arranque
 CMD ["yarn", "workspace", "@cosmo/api", "start"]
