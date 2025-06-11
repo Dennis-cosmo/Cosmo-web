@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
-import LogoPrincipal from "@/components/logos/LogoPrincipal";
+import LogoPrincipal from "@cosmo/web/components/logos/LogoPrincipal";
 
 export default function Home() {
   // Estado para feedback del formulario

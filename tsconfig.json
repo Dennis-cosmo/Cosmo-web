@@ -1,28 +1,11 @@
 {
-  "compilerOptions": {
-    "target": "es2020",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "baseUrl": ".",
-    "paths": {
-      "@cosmo/shared": ["packages/shared/src"],
-      "@cosmo/database": ["packages/database/src"],
-      "@cosmo/ui": ["packages/ui/src"],
-      "@cosmo/connectors": ["packages/connectors/src"]
-    }
-  },
-  "exclude": ["node_modules"]
+  "files": [],
+  "references": [
+    { "path": "packages/database" },
+    { "path": "packages/shared" },
+    { "path": "packages/connectors" },
+    { "path": "packages/ui" },
+    { "path": "apps/api" },
+    { "path": "apps/web" }
+  ]
 }

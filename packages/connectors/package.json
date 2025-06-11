@@ -5,10 +5,10 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build": "tsc -b .",
+    "clean": "rm -rf dist",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "lint": "eslint \"src/**/*.ts\"",
-    "clean": "rm -rf dist && rm -rf node_modules"
+    "lint": "eslint \"src/**/*.ts\""
   },
   "dependencies": {
     "@cosmo/shared": "*",
@@ -20,4 +20,4 @@
     "tsup": "^8.0.2",
     "typescript": "^5.3.3"
   }
-} 
+}

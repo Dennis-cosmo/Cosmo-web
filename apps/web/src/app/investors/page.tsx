@@ -2,9 +2,9 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import SearchBar from "@/components/investors/SearchBar";
-import Filters from "@/components/investors/Filters";
-import CompanyCard from "@/components/investors/CompanyCard";
+import SearchBar from "@cosmo/web/components/investors/SearchBar";
+import Filters from "@cosmo/web/components/investors/Filters";
+import CompanyCard from "@cosmo/web/components/investors/CompanyCard";
 
 // Datos de ejemplo
 const companies = [

@@ -4,6 +4,7 @@
     "module": "commonjs",
     "lib": ["es2020", "dom"],
     "declaration": true,
+    "declarationMap": true,
     "sourceMap": true,
     "removeComments": true,
     "strict": true,

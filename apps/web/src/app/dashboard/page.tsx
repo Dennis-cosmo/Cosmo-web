@@ -14,8 +14,8 @@ import {
 } from "recharts";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import { useSession } from "next-auth/react";
-import LogoPrincipal from "@/components/logos/LogoPrincipal";
-import IconPrincipal from "@/components/logos/IconPrincipal";
+import LogoPrincipal from "@cosmo/web/components/logos/LogoPrincipal";
+import IconPrincipal from "@cosmo/web/components/logos/IconPrincipal";
 
 // Datos estáticos para los gráficos (mantener como respaldo)
 const staticData = {
@@ -319,7 +319,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="mb-4 flex flex-wrap gap-2">
-                      {activity.criteria?.map((c, i) => (
+                      {activity.criteria?.map((c: any, i: any) => (
                         <span
                           key={c.label + i}
                           className={`px-3 py-1 rounded-full border text-xs font-medium ${c.color} flex items-center gap-1 animate-fadeIn transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-eco-green/10`}
@@ -332,7 +332,7 @@ export default function Dashboard() {
 
                     {activity.naceCodes && activity.naceCodes.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {activity.naceCodes.map((code, i) => (
+                        {activity.naceCodes.map((code: any, i: any) => (
                           <span
                             key={`nace-${code}-${i}`}
                             className="bg-lime-accent/10 text-lime-accent px-2 py-1 rounded text-xs font-medium"
@@ -344,7 +344,7 @@ export default function Dashboard() {
                     )}
 
                     <div className="flex flex-wrap gap-2 mb-2 mt-2">
-                      {activity.minimumSafeguards?.map((ms, i) => (
+                      {activity.minimumSafeguards?.map((ms: any, i: any) => (
                         <span
                           key={ms + i}
                           className="px-2 py-1 rounded bg-cosmo-700/80 border border-cosmo-500/40 text-xs text-white/80 animate-fadeIn delay-300 hover:bg-cosmo-700 hover:border-eco-green/30 transition-all duration-300"

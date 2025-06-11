@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build": "tsc -b .",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "eslint \"src/**/*.ts\"",
     "clean": "rm -rf dist && rm -rf node_modules"
@@ -16,4 +16,4 @@
     "tsup": "^8.0.2",
     "typescript": "^5.3.3"
   }
-} 
+}

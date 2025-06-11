@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Metadata } from "next";
-import IconPrincipal from "@/components/logos/IconPrincipal";
-import LogoPrincipal from "@/components/logos/LogoPrincipal";
+import IconPrincipal from "@cosmo/web/components/logos/IconPrincipal";
+import LogoPrincipal from "@cosmo/web/components/logos/LogoPrincipal";
 
 export const metadata: Metadata = {
   title: "Registro exitoso | Cosmo",
