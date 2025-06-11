@@ -3,8 +3,8 @@ import { Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import Header from "../components/Header";
 import { AuthProvider } from "../providers/AuthProvider";
-import IconPrincipal from "@/components/logos/IconPrincipal";
-import LogoPrincipal from "@/components/logos/LogoPrincipal";
+import IconPrincipal from "../components/logos/IconPrincipal";
+import LogoPrincipal from "../components/logos/LogoPrincipal";
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],

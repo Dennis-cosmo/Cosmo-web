@@ -1,4 +1,4 @@
-import SustainabilityReportPage from "@/components/reports/SustainabilityReportPage";
+import SustainabilityReportPage from "@cosmo/web/components/reports/SustainabilityReportPage";
 
 export const metadata = {
   title: "Reportes de Sostenibilidad | Cosmo",

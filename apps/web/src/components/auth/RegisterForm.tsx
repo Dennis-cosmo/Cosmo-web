@@ -166,6 +166,9 @@ const registerSchema = z
     // Campos de verificación
     acceptTerms: z.boolean(),
     acceptPrivacy: z.boolean(),
+
+    // Añadir campo para países LATAM
+    latamCountries: z.array(z.string()).optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden",
@@ -260,6 +263,14 @@ const budgetRangeOptions = [
   { value: "more_100000", label: "Más de 100.000€ al año" },
 ];
 
+// Añadir opciones de países LATAM
+const latamCountryOptions = [
+  { value: "colombia", label: "Colombia" },
+  { value: "costa_rica", label: "Costa Rica" },
+  { value: "panama", label: "Panamá" },
+  { value: "other", label: "Otras" },
+];
+
 export default function RegisterForm() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -305,6 +316,9 @@ export default function RegisterForm() {
     // Paso 4: Verificación
     acceptTerms: false,
     acceptPrivacy: false,
+
+    // Añadir campo para países LATAM
+    latamCountries: [] as string[],
   });
 
   // Función para actualizar el estado del formulario
@@ -511,6 +525,7 @@ export default function RegisterForm() {
         sustainabilityBudgetRange: formData.sustainabilityBudgetRange,
         sustainabilityNotes: formData.sustainabilityNotes,
         acceptTerms: formData.acceptTerms,
+        latamCountries: formData.latamCountries,
       };
 
       // Usar la ruta API interna de Next.js
@@ -789,6 +804,39 @@ export default function RegisterForm() {
             <p className="mt-1 text-sm text-red-600">{errors.taxonomyType}</p>
           )}
         </div>
+
+        {formData.taxonomyType === "LATAM" && (
+          <div className="mt-6">
+            <label className="block mb-2 text-sm font-medium text-gray-700">
+              Selecciona los países donde opera tu empresa
+            </label>
+            <div className="space-y-2">
+              {latamCountryOptions.map((option) => (
+                <div key={option.value} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`latam-${option.value}`}
+                    checked={formData.latamCountries.includes(option.value)}
+                    onChange={(e) =>
+                      handleMultiSelect(
+                        "latamCountries",
+                        option.value,
+                        e.target.checked
+                      )
+                    }
+                    className="h-4 w-4 text-eco-green focus:ring-lime-accent rounded"
+                  />
+                  <label
+                    htmlFor={`latam-${option.value}`}
+                    className="ml-2 text-sm text-gray-700"
+                  >
+                    {option.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {formData.taxonomyType === "EU" && (
           <div className="mt-6">

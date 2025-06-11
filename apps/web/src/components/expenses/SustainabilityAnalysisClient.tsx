@@ -233,10 +233,10 @@ export default function SustainabilityAnalysisClient() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 text-center mb-2">
+              <span className="text-lg font-semibold text-white dark:text-gray-200 text-center mb-2">
                 Organizando y clasificando tus gastos con IA...
               </span>
-              <span className="text-sm text-gray-500 dark:text-gray-400 text-center mb-2">
+              <span className="text-sm text-white dark:text-gray-400 text-center mb-2">
                 Este proceso puede tardar hasta 1-2 minutos dependiendo de la
                 cantidad de datos y la carga del servidor.
               </span>

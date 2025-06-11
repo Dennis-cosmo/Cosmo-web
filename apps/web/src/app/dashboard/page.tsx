@@ -343,7 +343,130 @@ export default function Dashboard() {
                       </div>
                     )}
 
-                    <div className="flex flex-wrap gap-2 mb-2 mt-2">
+                    {/* Do Not Significant Harm Section */}
+                    <div className="mt-6 relative group">
+                      {/* Gradient background effect */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-800/20 via-emerald-600/5 to-cosmo-700/30 rounded-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+
+                      {/* Animated border gradient */}
+                      <div className="absolute inset-0 rounded-lg p-[1px] bg-gradient-to-r from-emerald-700/30 via-emerald-500/20 to-emerald-700/30 animate-gradient-x"></div>
+
+                      <div className="relative bg-cosmo-800/60 backdrop-blur-sm rounded-lg p-6 border border-emerald-900/20">
+                        {/* Header with subtle glow effect */}
+                        <div className="flex items-center gap-2 mb-6">
+                          <h3 className="text-sm font-medium text-emerald-400 relative">
+                            Do Not Significant Harm
+                            <span className="absolute inset-0 blur-sm bg-emerald-700/20"></span>
+                          </h3>
+                          <div className="flex-1 h-[1px] bg-gradient-to-r from-emerald-600/40 to-transparent"></div>
+                        </div>
+
+                        <div className="space-y-4">
+                          {[
+                            {
+                              name: "Climate Change Mitigation",
+                              opex: "85%",
+                              capex: "90%",
+                              turnover: "88%",
+                            },
+                            {
+                              name: "Climate Change Adaptation",
+                              opex: "78%",
+                              capex: "82%",
+                              turnover: "80%",
+                            },
+                            {
+                              name: "Circular Economy",
+                              opex: "92%",
+                              capex: "88%",
+                              turnover: "90%",
+                            },
+                            {
+                              name: "Water",
+                              opex: "75%",
+                              capex: "80%",
+                              turnover: "78%",
+                            },
+                            {
+                              name: "Pollution",
+                              opex: "88%",
+                              capex: "85%",
+                              turnover: "86%",
+                            },
+                            {
+                              name: "Biodiversity",
+                              opex: "70%",
+                              capex: "75%",
+                              turnover: "73%",
+                            },
+                          ].map((criterion, index) => (
+                            <div
+                              key={criterion.name}
+                              className="group/item relative flex flex-col gap-3 p-3 rounded-lg bg-black/30 hover:bg-black/40 transition-all duration-300 transform hover:scale-[1.02]"
+                              style={{ animationDelay: `${index * 100}ms` }}
+                            >
+                              {/* Criterion name with hover effect */}
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-white/90 font-medium group-hover/item:text-emerald-400 transition-colors duration-300">
+                                  {criterion.name}
+                                </span>
+                                <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-emerald-900/20 to-transparent"></div>
+                              </div>
+
+                              {/* Percentages with animated bars */}
+                              <div className="grid grid-cols-3 gap-2">
+                                {[
+                                  {
+                                    label: "OpEx",
+                                    value: criterion.opex,
+                                    color: "emerald-500",
+                                    bgColor: "emerald-900/30",
+                                  },
+                                  {
+                                    label: "CapEx",
+                                    value: criterion.capex,
+                                    color: "emerald-400",
+                                    bgColor: "emerald-800/30",
+                                  },
+                                  {
+                                    label: "Turnover",
+                                    value: criterion.turnover,
+                                    color: "emerald-300",
+                                    bgColor: "emerald-700/30",
+                                  },
+                                ].map((metric) => (
+                                  <div key={metric.label} className="relative">
+                                    <div className="flex justify-between items-center mb-1">
+                                      <span className="text-xs text-white/60">
+                                        {metric.label}
+                                      </span>
+                                      <span
+                                        className={`text-xs font-medium text-${metric.color}`}
+                                      >
+                                        {metric.value}
+                                      </span>
+                                    </div>
+                                    <div
+                                      className={`h-1.5 bg-${metric.bgColor} rounded-full overflow-hidden`}
+                                    >
+                                      <div
+                                        className={`h-full bg-${metric.color} rounded-full transition-all duration-1000 ease-out group-hover/item:opacity-100 opacity-80`}
+                                        style={{
+                                          width: metric.value,
+                                          boxShadow: `0 0 8px var(--${metric.color})`,
+                                        }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 mb-2 mt-4">
                       {activity.minimumSafeguards?.map((ms: any, i: any) => (
                         <span
                           key={ms + i}
@@ -387,7 +510,7 @@ export default function Dashboard() {
                   </h2>
                   <div className="flex flex-col sm:flex-row gap-4 mb-6 mt-4">
                     <div className="flex-1 bg-cosmo-700/60 rounded-lg p-4 flex flex-col items-center border border-cosmo-500/30 backdrop-blur-sm hover:border-red-500/30 hover:bg-cosmo-700/80 transition-all duration-300 transform hover:-translate-y-1">
-                      <span className="text-xs text-white/60 mb-1">OpEx</span>
+                      <span className="text-xs text-white/60 mb-1">CAPEX</span>
                       <span className="text-lg font-semibold">
                         {activity.opEx}
                       </span>

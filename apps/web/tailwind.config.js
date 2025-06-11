@@ -94,6 +94,16 @@ module.exports = {
         card: "0 2px 10px rgba(168, 168, 168, 0.1)", // Sombra ligera con Grey Stone a 10% de opacidad
       },
       keyframes: {
+        "gradient-x": {
+          "0%, 100%": {
+            "background-size": "200% 200%",
+            "background-position": "left center",
+          },
+          "50%": {
+            "background-size": "200% 200%",
+            "background-position": "right center",
+          },
+        },
         fadeIn: {
           "0%": { opacity: "0", transform: "translateY(10px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
@@ -114,10 +124,19 @@ module.exports = {
         },
       },
       animation: {
-        "fade-in": "fadeIn 1s ease-out forwards",
-        fadeIn: "fadeIn 0.5s ease-out forwards",
+        "gradient-x": "gradient-x 15s ease infinite",
+        fadeIn: "fadeIn 0.5s ease-in forwards",
         pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         bounce: "bounce 1s infinite",
+      },
+      variables: {
+        "--emerald-300": "#6ee7b7",
+        "--emerald-400": "#34d399",
+        "--emerald-500": "#10b981",
+        "--emerald-600": "#059669",
+        "--emerald-700": "#047857",
+        "--emerald-800": "#065f46",
+        "--emerald-900": "#064e3b",
       },
     },
   },

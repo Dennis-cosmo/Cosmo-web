@@ -132,20 +132,7 @@ export default function Header() {
                 >
                   Dashboard
                 </Link>
-                <Link
-                  href="/investors"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 
-                    relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 
-                    after:bg-eco-green after:transform after:scale-x-0 after:origin-left 
-                    after:transition-transform after:duration-300 hover:after:scale-x-100
-                    hover:bg-eco-green/10 hover:drop-shadow-[0_0_8px_rgba(163,230,53,0.3)] ${
-                      isActive("/investors")
-                        ? "text-eco-green after:scale-x-100 bg-eco-green/5"
-                        : "text-white/90 hover:text-eco-green"
-                    }`}
-                >
-                  Investors
-                </Link>
+
                 <Link
                   href="/expenses"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 
@@ -187,6 +174,20 @@ export default function Header() {
                     }`}
                 >
                   Integrations
+                </Link>
+                <Link
+                  href="/investors"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 
+                    relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 
+                    after:bg-eco-green after:transform after:scale-x-0 after:origin-left 
+                    after:transition-transform after:duration-300 hover:after:scale-x-100
+                    hover:bg-eco-green/10 hover:drop-shadow-[0_0_8px_rgba(163,230,53,0.3)] ${
+                      isActive("/investors")
+                        ? "text-eco-green after:scale-x-100 bg-eco-green/5"
+                        : "text-white/90 hover:text-eco-green"
+                    }`}
+                >
+                  Investors
                 </Link>
               </>
             )}

@@ -149,9 +149,9 @@ export default function SustainabilityAnalysisResults({
       </div>
 
       {/* Estadísticas resumidas */}
-      <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-[#3E9D0A]/10 p-4 rounded-lg border border-[#3E9D0A]/20">
-          <h3 className="text-sm font-medium text-[#C6FF00]">OpEx</h3>
+          <h3 className="text-sm font-medium text-[#C6FF00]">CapEx</h3>
           <p className="text-2xl font-bold text-[#3E9D0A] mt-1">
             {formatCurrency(result.sustainableTotal)}
           </p>
@@ -169,6 +169,16 @@ export default function SustainabilityAnalysisResults({
           <p className="text-sm text-[#E1E1E1] mt-1">
             {result.nonSustainableExpenses.length} elementos (
             {(100 - result.sustainablePercentage).toFixed(1)}%)
+          </p>
+        </div>
+
+        <div className="bg-[#3E9D0A]/10 p-4 rounded-lg border border-[#3E9D0A]/20">
+          <h3 className="text-sm font-medium text-[#C6FF00]">Turnover</h3>
+          <p className="text-2xl font-bold text-[#3E9D0A] mt-1">
+            {formatCurrency(50000)} {/* Datos mock */}
+          </p>
+          <p className="text-sm text-[#E1E1E1] mt-1">
+            Facturación anual estimada
           </p>
         </div>
 
