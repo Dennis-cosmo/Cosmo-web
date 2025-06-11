@@ -24,7 +24,13 @@
     "esModuleInterop": true,
     "strict": false,
     "lib": ["es2020"],
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@cosmo/shared": ["packages/shared/src"],
+      "@cosmo/database": ["packages/database/src"],
+      "@cosmo/ui": ["packages/ui/src"],
+      "@cosmo/connectors": ["packages/connectors/src"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
