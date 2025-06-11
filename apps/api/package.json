@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "tsc -p tsconfig.build.json --noEmitOnError false"
+    "build": "tsc -p tsconfig.build.json --noEmitOnError false",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
     "dev": "ts-node -r tsconfig-paths/register src/main.ts",
