@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "babel apps/api/src --extensions '.ts' --out-dir apps/api/dist --copy-files"
+    "build": "babel apps/api/src --extensions '.ts' --out-dir apps/api/dist --copy-files",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
     "dev": "ts-node -r tsconfig-paths/register src/main.ts",
