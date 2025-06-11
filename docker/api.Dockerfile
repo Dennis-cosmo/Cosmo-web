@@ -1,29 +1,33 @@
-# Etapa 1: Build
-FROM node:18 AS builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copiamos los archivos de configuración y dependencias de todo el monorepo
-COPY package.json yarn.lock turbo.json tsconfig.json ./
-COPY apps ./apps
-COPY packages ./packages
+# Copiamos los package.json raíz y el lockfile
+COPY package.json yarn.lock ./
 
-# Instalamos dependencias solo de producción
+# Copiamos todo el código fuente del monorepo
+COPY . .
+
+# Instalamos dependencias completas con los workspaces disponibles
 RUN yarn install --frozen-lockfile
 
-# Build específico de api
+# Build específico de la API
 RUN yarn workspace @cosmo/api build
 
-# Etapa 2: Producción
-FROM node:18 AS production
+# Etapa de producción
+FROM node:18-alpine AS runner
 
 WORKDIR /app
-
-# Copiamos solo los outputs necesarios (puedes afinar esto para hacerlo aún más minimal)
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
 
 ENV NODE_ENV=production
 
-CMD ["node", "dist/main"]
+# Copiamos solo el build de la API, node_modules y package.json
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+EXPOSE 4000
+
+# Comando de arranque
+CMD ["yarn", "workspace", "@cosmo/api", "start"]
