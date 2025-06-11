@@ -1,37 +1,3 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "es2020",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "skipLibCheck": true,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false,
-    "incremental": true,
-    "noEmit": false,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "strict": false,
-    "lib": ["es2020"],
-    "types": ["node"],
-    "paths": {
-      "@cosmo/shared": ["packages/shared/src"],
-      "@cosmo/database": ["packages/database/src"],
-      "@cosmo/ui": ["packages/ui/src"],
-      "@cosmo/connectors": ["packages/connectors/src"]
-    }
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+  "extends": "./tsconfig.build.json"
 }
