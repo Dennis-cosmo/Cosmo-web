@@ -11,9 +11,6 @@
     "clean": "rm -rf dist && rm -rf node_modules"
   },
   "devDependencies": {
-    "@types/node": "^20.11.24",
-    "eslint": "^8.57.0",
-    "tsup": "^8.0.2",
-    "typescript": "^5.3.3"
+    "tsup": "^8.0.2"
   }
 }

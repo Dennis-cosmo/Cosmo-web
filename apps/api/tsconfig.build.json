@@ -1,17 +1,10 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "strict": false,
-    "noImplicitAny": false,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": false,
     "noEmitOnError": false,
-    "outDir": "./dist",
     "composite": true,
-    "incremental": true,
-    "tsBuildInfoFile": ".tsbuildinfo",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "tsBuildInfoFile": ".tsbuildinfo"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]

@@ -28,7 +28,7 @@ cosmo/
 
 ## 🛠️ Requisitos previos
 
-- **Node.js**: Versión 18.x o superior
+- **Node.js**: Versión 22.x o superior
 - **Yarn**: Versión 1.22.x o superior
 - **Docker y Docker Compose**: Para entorno de desarrollo local
 - **Git**: Para clonar el repositorio

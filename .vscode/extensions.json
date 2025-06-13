@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "dbaeumer.vscode-eslint",
+        "mhutchie.git-graph",
+        "wix.vscode-import-cost",
+        "esbenp.prettier-vscode"
+    ]
+}
