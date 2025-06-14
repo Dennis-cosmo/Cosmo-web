@@ -28,6 +28,5 @@
       "@cosmo/ui/*": ["packages/ui/src/*"]
     },
     "types": ["node"],
-    "incremental": true
   }
 }
