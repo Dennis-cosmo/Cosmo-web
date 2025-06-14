@@ -5,19 +5,16 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc -b . --noEmitOnError false",
+    "build": "tsc -b .",
     "clean": "rm -rf dist",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "eslint \"src/**/*.ts\""
   },
   "dependencies": {
     "@cosmo/shared": "*",
-    "axios": "^1.6.7"
+    "axios": "^1.9.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.24",
-    "eslint": "^8.57.0",
-    "tsup": "^8.0.2",
-    "typescript": "^5.3.3"
+    "tsup": "^8.0.2"
   }
 }

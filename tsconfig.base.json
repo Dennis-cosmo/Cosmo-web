@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "es2020",
     "module": "commonjs",
-    "lib": ["es2020", "dom"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -18,15 +17,16 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
+    "isolatedModules": false,
     "baseUrl": ".",
     "paths": {
       "@cosmo/api/*": ["apps/api/src/*"],
       "@cosmo/web/*": ["apps/web/src/*"],
       "@cosmo/database/*": ["packages/database/src/*"],
-      "@cosmo/shared/*": ["packages/shared/src/*"]
+      "@cosmo/shared/*": ["packages/shared/src/*"],
+      "@cosmo/connectors/*": ["packages/connectors/src/*"],
+      "@cosmo/ui/*": ["packages/ui/src/*"]
     },
     "types": ["node"],
-    "incremental": true
   }
 }

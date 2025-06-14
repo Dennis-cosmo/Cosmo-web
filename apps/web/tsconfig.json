@@ -3,22 +3,16 @@
   "compilerOptions": {
     "jsx": "preserve",
     "module": "esnext",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "noEmit": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "skipLibCheck": true
+    "noEmit": true, // Next.js handles transpilation
+    "incremental": true, // Recommended for Next.js
+    "isolatedModules": true, // Required by Next.js
+    "resolveJsonModule": true, // Good practice, often needed
+    "skipLibCheck": true, // Can speed up type checking
+
+    "plugins": [{ "name": "next" }]
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }

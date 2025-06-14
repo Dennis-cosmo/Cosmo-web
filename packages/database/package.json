@@ -5,15 +5,16 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc -b . --noEmitOnError false",
+    "build": "tsc -b .",
     "dev": "tsup src/index.ts --format esm,cjs --watch --dts",
     "lint": "eslint \"src/**/*.ts\"",
     "clean": "rm -rf dist",
     "migrate": "ts-node src/scripts/migrate.ts",
-    "migration:create": "typeorm migration:create",
-    "db:migrate": "typeorm migration:run -d dist/data-source.js",
-    "db:generate": "typeorm migration:generate -d dist/data-source.js",
-    "db:revert": "typeorm migration:revert -d dist/data-source.js"
+    "typeorm": "ts-node --project tsconfig.json ../../node_modules/typeorm/cli.js",
+    "migration:create": "yarn typeorm migration:create",
+    "db:migrate": "yarn typeorm migration:run -d src/config/typeorm.ts",
+    "db:generate": "yarn typeorm migration:generate -d src/config/typeorm.ts",
+    "db:revert": "yarn typeorm migration:revert -d src/config/typeorm.ts"
   },
   "dependencies": {
     "@cosmo/shared": "*",
@@ -24,9 +25,6 @@
     "typeorm": "^0.3.20"
   },
   "devDependencies": {
-    "@types/node": "^20.11.24",
-    "eslint": "^8.57.0",
-    "tsup": "^8.0.2",
-    "typescript": "^5.3.3"
+    "tsup": "^8.0.2"
   }
 }

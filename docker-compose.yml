@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   postgres:
     container_name: ${COMPOSE_PROJECT_NAME:-cosmo}-postgres
@@ -41,7 +39,7 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME:-cosmo}-api
     build:
       context: .
-      dockerfile: ./docker/api.dev.Dockerfile
+      dockerfile: ./docker/api.Dockerfile
       args:
         - NODE_ENV=${NODE_ENV:-development}
     ports:
@@ -85,7 +83,7 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME:-cosmo}-web
     build:
       context: .
-      dockerfile: ./docker/web.dev.Dockerfile
+      dockerfile: ./docker/web.Dockerfile
       args:
         - NODE_ENV=${NODE_ENV:-development}
     ports:
